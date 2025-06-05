@@ -107,42 +107,25 @@
 
                     <!-- the list of budget status, should get budget a max of 4 budgets from the budget page(the first 4) -->
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span>Food & Dining</span>
-                                <span>Rs450/Rs600</span>
-                            </div>
-                            <div class="progress">
-                                <div class="progress-bar" role="progressbar" style="width: 75%"></div>
-                            </div>
-                        </li>
-                        <li class="list-group-item">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span>Entertainment</span>
-                                <span>Rs220/Rs200</span>
-                            </div>
-                            <div class="progress">
-                                <div class="progress-bar danger" role="progressbar" style="width: 110%"></div>
-                            </div>
-                        </li>
-                        <li class="list-group-item">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span>Transportation</span>
-                                <span>Rs190/Rs300</span>
-                            </div>
-                            <div class="progress">
-                                <div class="progress-bar" role="progressbar" style="width: 63%"></div>
-                            </div>
-                        </li>
-                        <li class="list-group-item">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span>Shopping</span>
-                                <span>Rs320/Rs350</span>
-                            </div>
-                            <div class="progress">
-                                <div class="progress-bar warning" role="progressbar" style="width: 91%"></div>
-                            </div>
-                        </li>
+                        <% if (budgets && budgets.length > 0) { %>
+                            <% budgets.forEach(function(budget) { %>
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span><%= budget.category %></span>
+                                        <span>Rs<%= budget.spent.toFixed(0) %>/Rs<%= budget.amount.toFixed(0) %></span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar <%= budget.percentageUsed > 100 ? 'danger' : budget.percentageUsed > 90 ? 'warning' : '' %>" 
+                                             role="progressbar" 
+                                             style="width: <%= Math.min(budget.percentageUsed, 100) %>%"></div>
+                                    </div>
+                                </li>
+                            <% }); %>
+                        <% } else { %>
+                            <li class="list-group-item text-center text-muted">
+                                No budgets created yet
+                            </li>
+                        <% } %>
                         <div class="text-center mt-3">
                             <a href="/budget" class="btn btn-sm btn-outline-primary">View All Budgets</a>
                             <br><br>

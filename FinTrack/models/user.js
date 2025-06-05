@@ -18,6 +18,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    monthlyIncome: {
+        type: Number,
+        default: 0
+    },
     token: {
         type: String,
         default: null

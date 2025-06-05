@@ -1,6 +1,8 @@
 const { Transaction } = require('mongodb');
 const Transactions = require('../models/transactions');
 const User = require('../models/user');
+const Budget = require('../models/budget');
+
 
 const express = require('express');
 const router = express.Router();
@@ -20,29 +22,18 @@ router.get('/', requireAuth, async function(req, res) {
     try {
         const userId = req.session.user._id;
         
+        // Get user data including monthly income
+        const user = await User.findById(userId);
+        
         // Get current month's start and end dates
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
         
-        // Calculate monthly income
-        const monthlyIncome = await Transactions.aggregate([
-            {
-                $match: {
-                    userId: new mongoose.Types.ObjectId(userId),
-                    transactiontype: '+',
-                    transactiondate: { $gte: startOfMonth, $lte: endOfMonth }
-                }
-            },
-            {
-                $group: {
-                    _id: null,
-                    total: { $sum: '$transactionamount' }
-                }
-            }
-        ]);
+        // Use monthly income from settings
+        const monthlyIncome = user.monthlyIncome || 0;
         
-        // Calculate monthly expenses
+        // Calculate monthly expenses (keep this as is - calculated from transactions)
         const monthlyExpenses = await Transactions.aggregate([
             {
                 $match: {
@@ -59,8 +50,8 @@ router.get('/', requireAuth, async function(req, res) {
             }
         ]);
         
-        // Calculate total balance (all time)
-        const allIncome = await Transactions.aggregate([
+        // Calculate total balance (all time income from transactions minus all expenses)
+        const allIncomeTransactions = await Transactions.aggregate([
             {
                 $match: {
                     userId: new mongoose.Types.ObjectId(userId),
@@ -90,28 +81,50 @@ router.get('/', requireAuth, async function(req, res) {
             }
         ]);
         
-        const income = monthlyIncome[0]?.total || 0;
         const expenses = monthlyExpenses[0]?.total || 0;
-        const savings = income - expenses;
-        const totalIncome = allIncome[0]?.total || 0;
+        const savings = monthlyIncome - expenses;
+        const totalIncomeTransactions = allIncomeTransactions[0]?.total || 0;
         const totalExpenses = allExpenses[0]?.total || 0;
-        const currentBalance = totalIncome - totalExpenses;
+        
+        // For current balance, you might want to consider:
+        // Option 1: Only transaction-based balance
+        // const currentBalance = totalIncomeTransactions - totalExpenses;
+        
+        // Option 2: Include monthly income history (recommended)
+        // Calculate how many months the user has been active
+        const userCreatedDate = new Date(user._id.getTimestamp());
+        const monthsSinceCreation = Math.max(1, 
+            (now.getFullYear() - userCreatedDate.getFullYear()) * 12 + 
+            (now.getMonth() - userCreatedDate.getMonth()) + 1
+        );
+        const totalMonthlyIncome = monthlyIncome * monthsSinceCreation;
+        const currentBalance = totalMonthlyIncome + totalIncomeTransactions - totalExpenses;
         
         // Get recent transactions
         const recentTransactions = await Transactions.find({ userId: userId })
             .sort({ transactiondate: -1 })
             .limit(5);
         
+                // Get budgets for dashboard display (limit to 4)
+                const budgets = await Budget.find({ userId: userId }).limit(4);
+        
+                const budgetsWithCalculations = budgets.map(budget => ({
+                    ...budget.toObject(),
+                    remaining: budget.getRemaining(),
+                    percentageUsed: budget.getPercentageUsed()
+                }));
+
         const ctx_dashboard = {
             pagetitle: 'FinTrack - Dashboard',
             currentbalance: currentBalance.toFixed(2),
-            monthlyincome: income.toFixed(2),
+            monthlyincome: monthlyIncome.toFixed(2),  // Now using the value from settings
             monthlyexpenses: expenses.toFixed(2),
             monthlysavings: savings.toFixed(2),
-            firstname: req.session.user.firstname,
-            lastname: req.session.user.lastname,
-            user: req.session.user,
-            recentTransactions: recentTransactions
+            firstname: user.firstname,
+            lastname: user.lastname,
+            user: user,
+            recentTransactions: recentTransactions,
+            budgets: budgetsWithCalculations
         };
         
         res.render('dashboard', ctx_dashboard);
@@ -509,24 +522,261 @@ router.get('/registration', async function(req, res) {
     res.render('registration');
 });
 
-// BUDGET
+// BUDGET - GET (Updated)
 router.get('/budget', requireAuth, async function(req, res) {
     try {
         const userId = req.session.user._id;
         
-        // TODO: Implement budget calculations based on user data
-        // For now, using placeholder data
+        // Get all budgets for the user
+        const budgets = await Budget.find({ userId: userId });
+        
+        // Calculate totals
+        let totalBudgetAmount = 0;
+        let totalSpent = 0;
+        
+        // Add calculated properties to each budget
+        const budgetsWithCalculations = budgets.map(budget => {
+            totalBudgetAmount += budget.amount;
+            totalSpent += budget.spent;
+            
+            return {
+                ...budget.toObject(),
+                remaining: budget.getRemaining(),
+                percentageUsed: budget.getPercentageUsed()
+            };
+        });
+        
+        const totalRemaining = totalBudgetAmount - totalSpent;
+        
         const ctx_budget = {
             pagetitle: 'FinTrack - Budget',
-            totalbudgetamount: '0',
-            spentsofar: '0',
-            remianing: '0'
+            budgets: budgetsWithCalculations,
+            totalbudgetamount: totalBudgetAmount.toFixed(2),
+            spentsofar: totalSpent.toFixed(2),
+            remaining: totalRemaining.toFixed(2),
+            successMessage: req.query.success || null,
+            errorMessage: req.query.error || null
         };
         
         res.render('budget', ctx_budget);
     } catch (error) {
         console.error('Budget error:', error);
         res.status(500).send('Error loading budget');
+    }
+});
+
+// CREATE BUDGET - POST
+router.post('/budget/create', requireAuth, async function(req, res) {
+    try {
+        const userId = req.session.user._id;
+        const { category, amount, description } = req.body;
+        
+        // Check if budget already exists for this category
+        const existingBudget = await Budget.findOne({ 
+            userId: userId, 
+            category: category 
+        });
+        
+        if (existingBudget) {
+            return res.redirect('/budget?error=Budget already exists for this category');
+        }
+        
+        // Create new budget
+        const newBudget = new Budget({
+            userId: userId,
+            category: category,
+            amount: parseFloat(amount),
+            description: description || '',
+            startDate: new Date()
+        });
+        
+        await newBudget.save();
+        
+        // Update spending based on existing transactions
+        await updateBudgetSpending(userId, category);
+        
+        res.redirect('/budget?success=Budget created successfully');
+    } catch (error) {
+        console.error('Create budget error:', error);
+        res.redirect('/budget?error=Failed to create budget');
+    }
+});
+
+// EDIT BUDGET - POST
+router.post('/budget/edit/:id', requireAuth, async function(req, res) {
+    try {
+        const userId = req.session.user._id;
+        const budgetId = req.params.id;
+        const { amount, description } = req.body;
+        
+        const budget = await Budget.findOneAndUpdate(
+            { _id: budgetId, userId: userId },
+            { 
+                amount: parseFloat(amount),
+                description: description || ''
+            },
+            { new: true }
+        );
+        
+        if (!budget) {
+            return res.redirect('/budget?error=Budget not found');
+        }
+        
+        res.redirect('/budget?success=Budget updated successfully');
+    } catch (error) {
+        console.error('Edit budget error:', error);
+        res.redirect('/budget?error=Failed to update budget');
+    }
+});
+
+// DELETE BUDGET - GET
+router.get('/budget/delete/:id', requireAuth, async function(req, res) {
+    try {
+        const userId = req.session.user._id;
+        const budgetId = req.params.id;
+        
+        await Budget.findOneAndDelete({ _id: budgetId, userId: userId });
+        
+        res.redirect('/budget?success=Budget deleted successfully');
+    } catch (error) {
+        console.error('Delete budget error:', error);
+        res.redirect('/budget?error=Failed to delete budget');
+    }
+});
+
+// Function to update budget spending based on transactions
+async function updateBudgetSpending(userId, category) {
+    try {
+        // Get current month's start and end dates
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        
+        // Calculate total spending for this category
+        const spending = await Transactions.aggregate([
+            {
+                $match: {
+                    userId: new mongoose.Types.ObjectId(userId),
+                    transactiontype: '-', // Only expenses
+                    transactioncategory: category,
+                    transactiondate: { $gte: startOfMonth, $lte: endOfMonth }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: '$transactionamount' }
+                }
+            }
+        ]);
+        
+        const totalSpent = spending[0]?.total || 0;
+        
+        // Update the budget
+        await Budget.findOneAndUpdate(
+            { userId: userId, category: category },
+            { spent: totalSpent }
+        );
+    } catch (error) {
+        console.error('Error updating budget spending:', error);
+    }
+}
+
+// Update the ADD TRANSACTION route to update budgets
+router.post('/transactions/AddTransactions', requireAuth, async function(req, res) {
+    try {
+        const userId = req.session.user._id;
+        
+        const new_transaction = new Transactions({
+            userId: userId,
+            transactiontitle: req.body.transactiontitle,
+            transactionamount: req.body.transactionamount,
+            transactiontype: req.body.transactiontype,
+            transactioncategory: req.body.transactioncategory,
+            transactiondate: req.body.transactiondate,
+            transactionnote: req.body.transactionnote
+        });
+
+        await new_transaction.save();
+        
+        // Update budget if it's an expense
+        if (req.body.transactiontype === '-') {
+            await updateBudgetSpending(userId, req.body.transactioncategory);
+        }
+        
+        res.redirect('/transactions');
+    } catch (error) {
+        console.error('Error adding transaction:', error);
+        res.status(500).send('Error adding transaction');
+    }
+});
+
+// Update the DELETE TRANSACTION route to update budgets
+router.get('/delete-transactions/:id', requireAuth, async function(req, res) {
+    try {
+        const id = req.params.id;
+        const userId = req.session.user._id;
+        
+        // Get transaction details before deleting
+        const transaction = await Transactions.findOne({ _id: id, userId: userId });
+        
+        if (transaction) {
+            const category = transaction.transactioncategory;
+            const wasExpense = transaction.transactiontype === '-';
+            
+            // Delete the transaction
+            await Transactions.findOneAndDelete({ _id: id, userId: userId });
+            
+            // Update budget if it was an expense
+            if (wasExpense) {
+                await updateBudgetSpending(userId, category);
+            }
+        }
+        
+        res.redirect('/transactions');
+    } catch (error) {
+        console.error('Error deleting transaction:', error);
+        res.status(500).send('Error deleting transaction');
+    }
+});
+
+// Update the UPDATE TRANSACTION route to update budgets
+router.post('/transactions/update-transactions', requireAuth, async function(req, res) {
+    try {
+        const id = req.body.transactionId;
+        const userId = req.session.user._id;
+        
+        // Get the old transaction to check if category changed
+        const oldTransaction = await Transactions.findOne({ _id: id, userId: userId });
+        
+        const data = {
+            transactiontitle: req.body.transactiontitle,
+            transactionamount: req.body.transactionamount,
+            transactiontype: req.body.transactiontype,
+            transactioncategory: req.body.transactioncategory,
+            transactiondate: req.body.transactiondate,
+            transactionnote: req.body.transactionnote,
+        };
+        
+        await Transactions.findOneAndUpdate(
+            { _id: id, userId: userId }, 
+            data
+        );
+        
+        // Update budgets for both old and new categories if they're expenses
+        if (oldTransaction) {
+            if (oldTransaction.transactiontype === '-') {
+                await updateBudgetSpending(userId, oldTransaction.transactioncategory);
+            }
+            if (data.transactiontype === '-' && data.transactioncategory !== oldTransaction.transactioncategory) {
+                await updateBudgetSpending(userId, data.transactioncategory);
+            }
+        }
+        
+        res.redirect('/transactions');
+    } catch (error) {
+        console.error('Error updating transaction:', error);
+        res.status(500).send('Error updating transaction');
     }
 });
 
@@ -611,21 +861,101 @@ router.get('/savingsgoals', requireAuth, async function(req, res) {
     }
 });
 
-// SETTINGS
+// SETTINGS - GET
 router.get('/settings', requireAuth, async function(req, res) {
     try {
+        const user = await User.findById(req.session.user._id);
+        
         const ctx_settings = {
             pagetitle: 'FinTrack - Settings',
-            firstname: req.session.user.firstname,
-            lastname: req.session.user.lastname,
-            email: req.session.user.email,
-            phonenumber: req.session.user.phonenumber || '+230 1234 5678'
+            firstname: user.firstname,
+            lastname: user.lastname,
+            email: user.email,
+            monthlyIncome: user.monthlyIncome || 0,
+            phonenumber: user.phonenumber || '+230 1234 5678',
+            successMessage: req.query.success === 'true' ? 'Settings updated successfully!' : null,
+            errorMessage: req.query.error || null
         };
         
         res.render('settings', ctx_settings);
     } catch (error) {
         console.error('Settings error:', error);
         res.status(500).send('Error loading settings');
+    }
+});
+
+// SETTINGS UPDATE - POST
+router.post('/settings/update', requireAuth, async function(req, res) {
+    try {
+        const userId = req.session.user._id;
+        const { firstname, lastname, email, monthlyIncome } = req.body;
+        
+        // Check if email is being changed and if it's already taken
+        if (email !== req.session.user.email) {
+            const existingUser = await User.findOne({ email: email, _id: { $ne: userId } });
+            if (existingUser) {
+                return res.redirect('/settings?error=Email already in use');
+            }
+        }
+        
+        // Update user data
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            {
+                firstname: firstname,
+                lastname: lastname,
+                email: email,
+                monthlyIncome: parseFloat(monthlyIncome) || 0
+            },
+            { new: true, runValidators: true }
+        );
+        
+        // Update session data
+        req.session.user = {
+            _id: updatedUser._id,
+            firstname: updatedUser.firstname,
+            lastname: updatedUser.lastname,
+            email: updatedUser.email
+        };
+        
+        res.redirect('/settings?success=true');
+    } catch (error) {
+        console.error('Settings update error:', error);
+        res.redirect('/settings?error=Failed to update settings');
+    }
+});
+
+// CHANGE PASSWORD - POST
+router.post('/settings/change-password', requireAuth, async function(req, res) {
+    try {
+        const userId = req.session.user._id;
+        const { currentPassword, newPassword, confirmPassword } = req.body;
+        
+        // Validate passwords match
+        if (newPassword !== confirmPassword) {
+            return res.redirect('/settings?error=New passwords do not match');
+        }
+        
+        // Get user and verify current password
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.redirect('/settings?error=User not found');
+        }
+        
+        const isValidPassword = bcrypt.compareSync(currentPassword, user.password);
+        if (!isValidPassword) {
+            return res.redirect('/settings?error=Current password is incorrect');
+        }
+        
+        // Hash new password and update
+        const hashedPassword = bcrypt.hashSync(newPassword, 10);
+        user.password = hashedPassword;
+        await user.save();
+        
+        res.redirect('/settings?success=true');
+    } catch (error) {
+        console.error('Password change error:', error);
+        res.redirect('/settings?error=Failed to change password');
     }
 });
 
