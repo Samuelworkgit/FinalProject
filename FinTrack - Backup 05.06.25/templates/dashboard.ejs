@@ -1,0 +1,237 @@
+<%- include('./partials/header.ejs') %>
+
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white mb-4 rounded">
+            <div class="container-fluid">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <form class="d-flex me-auto">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input class="form-control border-0 bg-light" type="search" placeholder="Search transactions...">
+                        </div>
+                    </form>
+                    <!-- <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-bell"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown ms-3">
+                            <a class="nav-link user-profile" href="/settings" role="button">
+                                <span><%- firstname %> <%- lastname %></span>
+                            </a>
+                        </li>
+                    </ul> -->
+                </div>
+            </div>
+        </nav>
+
+        <!-- Welcome Message -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1">Welcome back, <%- user.firstname %>!</h4>
+                <p class="text-muted mb-0">Here's what's happening with your finances today.</p>
+            </div>
+            <!-- <div>
+                <button class="btn btn-primary" href="/transactions">
+                    <i class="bi bi-plus-lg"></i> Add Transaction
+                </button>
+            </div> -->
+        </div>
+
+        <!-- Financial Summary -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card summary-card balance-card">
+                    <i class="bi bi-wallet2"></i>
+                    <div class="balance">Rs <%- currentbalance %></div>
+                    <div class="label">Current Balance</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card summary-card income-card">
+                    <i class="bi bi-arrow-down-circle"></i>
+                    <div class="balance">Rs <%- monthlyincome %></div>
+                    <div class="label">Monthly Income</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card summary-card expense-card">
+                    <i class="bi bi-arrow-up-circle"></i>
+                    <div class="balance">Rs <%- monthlyexpenses %></div>
+                    <div class="label">Monthly Expenses</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card summary-card savings-card">
+                    <i class="bi bi-piggy-bank"></i>
+                    <div class="balance">Rs <%- monthlysavings %></div>
+                    <div class="label">Monthly Savings</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts and Transaction History -->
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>Spending Overview</div>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-secondary">Week</button>
+                            <button class="btn btn-sm btn-outline-secondary active">Month</button>
+                            <button class="btn btn-sm btn-outline-secondary">Year</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- This would be replaced with a real chart -->
+                        <div style="height: 300px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                            <p class="text-muted">To Add a Spending Overview Chart</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        Budget Status
+                    </div>
+
+                    <!-- the list of budget status, should get budget a max of 4 budgets from the budget page(the first 4) -->
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Food & Dining</span>
+                                <span>Rs450/Rs600</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 75%"></div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Entertainment</span>
+                                <span>Rs220/Rs200</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar danger" role="progressbar" style="width: 110%"></div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Transportation</span>
+                                <span>Rs190/Rs300</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 63%"></div>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Shopping</span>
+                                <span>Rs320/Rs350</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar warning" role="progressbar" style="width: 91%"></div>
+                            </div>
+                        </li>
+                        <div class="text-center mt-3">
+                            <a href="/budget" class="btn btn-sm btn-outline-primary">View All Budgets</a>
+                            <br><br>
+                        </div>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>Recent Transactions</div>
+                <a href="/transactions" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+
+
+            <!-- should get the 5 last transactions from the transactions page -->
+            <div class="card-body">
+                <div class="transaction-item">
+                    <div class="transaction-icon expense">
+                        <i class="bi bi-cart"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="fw-bold">Grocery Shopping</div>
+                        <div class="transaction-category">Food & Dining • Today</div>
+                    </div>
+                    <div class="transaction-amount expense">
+                        -Rs 3,450
+                    </div>
+                </div>
+                <div class="transaction-item">
+                    <div class="transaction-icon income">
+                        <i class="bi bi-briefcase"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="fw-bold">Salary Deposit</div>
+                        <div class="transaction-category">Income • Yesterday</div>
+                    </div>
+                    <div class="transaction-amount income">
+                        +Rs 90,000
+                    </div>
+                </div>
+                <div class="transaction-item">
+                    <div class="transaction-icon expense">
+                        <i class="bi bi-lightning"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="fw-bold">Electricity Bill</div>
+                        <div class="transaction-category">Utilities • April 1, 2025</div>
+                    </div>
+                    <div class="transaction-amount expense">
+                        -Rs 3,780
+                    </div>
+                </div>
+                <div class="transaction-item">
+                    <div class="transaction-icon expense">
+                        <i class="bi bi-cup-hot"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="fw-bold">Coffee Shop</div>
+                        <div class="transaction-category">Food & Dining • March 30, 2025</div>
+                    </div>
+                    <div class="transaction-amount expense">
+                        -Rs 230
+                    </div>
+                </div>
+                <div class="transaction-item">
+                    <div class="transaction-icon expense">
+                        <i class="bi bi-film"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="fw-bold">Movie Tickets</div>
+                        <div class="transaction-category">Entertainment • March 27, 2025</div>
+                    </div>
+                    <div class="transaction-amount expense">
+                        -Rs 1,280
+                    </div>
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

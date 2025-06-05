@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack - Login</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="d-flex align-items-center">
+    <div class="container">
+        <div class="login-container">
+            <div class="logo">
+                <h1>Fin<span>Track</span></h1>
+                <p class="text-muted">Your Personal Finance Manager</p>
+            </div>
+            
+            <form action="/login" method="POST">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+                
+                <!-- <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="rememberMe">
+                    <label class="form-check-label" for="rememberMe">Remember me</label>
+                </div> -->
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" href="/dashboard">Log In</button>
+                    <!-- <button type="submit" class="btn btn-primary" href="./dashboard.html">Log In</button> -->
+                </div>
+            </form>
+            
+            <div class="login-footer">
+                <!-- <p>Forgot password? <a href="#">Reset it here</a></p> -->
+                <p>Don't have an account? <a href="/registration">Sign up</a></p>
+            </div>
+        </div>
+    </div>
+    
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

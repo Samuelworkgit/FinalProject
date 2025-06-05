@@ -1,0 +1,290 @@
+<%- include('./partials/header.ejs') %>
+
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white mb-4 rounded">
+            <div class="container-fluid">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <form class="d-flex me-auto">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input class="form-control border-0 bg-light" type="search" placeholder="Search savings goals...">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1">Savings Goals</h4>
+                <p class="text-muted">Track progress towards your financial goals</p>
+            </div>
+            <div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSavingsGoalModal">
+                    <i class="bi bi-plus-lg"></i> Create New Goal
+                </button>
+            </div>
+        </div>
+
+        <!-- Savings Goals Summary -->
+        <div class="card mb-4">
+            <div class="card-header">
+                Savings Overview
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card summary-card">
+                            <i class="bi bi-piggy-bank"></i>
+                            <div class="balance">Rs <%- totalsavings %></div>
+                            <div>Total Savings</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card summary-card">
+                            <i class="bi bi-trophy"></i>
+                            <div class="balance">Rs <%- totalgoalamount %></div>
+                            <div>Total Goal Amount</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card summary-card">
+                            <i class="bi bi-calendar-check"></i>
+                            <div class="balance"><%- activegoal %></div>
+                            <div>Active Goals</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Savings Goals List -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Your Savings Goals</h5>
+            </div>
+            <div class="card-body">
+                <!-- Emergency Fund Goal -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5 class="mb-1"><i class="bi bi-shield me-2"></i> Emergency Fund</h5>
+                                <p class="text-muted mb-2">A safety net for unexpected expenses</p>
+                                
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <div>Progress</div>
+                                        <div>Rs 300,000 / Rs 600,000</div>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" style="width: 50%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex mb-2">
+                                    <div class="me-4">
+                                        <small class="text-muted">Target Date</small>
+                                        <div>December 31, 2025</div>
+                                    </div>
+                                    <div class="me-4">
+                                        <small class="text-muted">Monthly Contribution</small>
+                                        <div>Rs 25,000</div>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted">Remaining</small>
+                                        <div>Rs 300,000</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary">Add Funds</button>
+                                    <button class="btn btn-sm btn-outline-secondary">Edit Goal</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </div>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-center justify-content-center">
+                                <div class="text-center">
+                                    <div style="width: 120px; height: 120px; border-radius: 50%; border: 10px solid #e9ecef; border-top-color: #85bb65; transform: rotate(180deg);" class="mb-2"></div>
+                                    <h3 class="mb-0">50%</h3>
+                                    <div class="text-muted">Completed</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Home Down Payment Goal -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5 class="mb-1"><i class="bi bi-house me-2"></i> Home Down Payment</h5>
+                                <p class="text-muted mb-2">Saving for a house down payment</p>
+                                
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <div>Progress</div>
+                                        <div>Rs 350,000 / Rs 700,000</div>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" style="width: 50%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex mb-2">
+                                    <div class="me-4">
+                                        <small class="text-muted">Target Date</small>
+                                        <div>July 31, 2026</div>
+                                    </div>
+                                    <div class="me-4">
+                                        <small class="text-muted">Monthly Contribution</small>
+                                        <div>Rs 20,000</div>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted">Remaining</small>
+                                        <div>Rs 350,000</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary">Add Funds</button>
+                                    <button class="btn btn-sm btn-outline-secondary">Edit Goal</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </div>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-center justify-content-center">
+                                <div class="text-center">
+                                    <div style="width: 120px; height: 120px; border-radius: 50%; border: 10px solid #e9ecef; border-top-color: #85bb65; transform: rotate(180deg);" class="mb-2"></div>
+                                    <h3 class="mb-0">50%</h3>
+                                    <div class="text-muted">Completed</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Vacation Fund Goal -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5 class="mb-1"><i class="bi bi-airplane me-2"></i> Vacation Fund</h5>
+                                <p class="text-muted mb-2">Trip to Bali</p>
+                                
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <div>Progress</div>
+                                        <div>Rs 30,000 / Rs 200,000</div>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" style="width: 15%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex mb-2">
+                                    <div class="me-4">
+                                        <small class="text-muted">Target Date</small>
+                                        <div>November 15, 2025</div>
+                                    </div>
+                                    <div class="me-4">
+                                        <small class="text-muted">Monthly Contribution</small>
+                                        <div>Rs 10,000</div>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted">Remaining</small>
+                                        <div>Rs 170,000</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary">Add Funds</button>
+                                    <button class="btn btn-sm btn-outline-secondary">Edit Goal</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </div>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-center justify-content-center">
+                                <div class="text-center">
+                                    <div style="width: 120px; height: 120px; border-radius: 50%; border: 10px solid #e9ecef; border-top-color: #85bb65; transform: rotate(27deg);" class="mb-2"></div>
+                                    <h3 class="mb-0">15%</h3>
+                                    <div class="text-muted">Completed</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Savings Goal Modal -->
+    <div class="modal fade" id="addSavingsGoalModal" tabindex="-1" aria-labelledby="addSavingsGoalModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addSavingsGoalModalLabel">Create New Savings Goal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="goalName" class="form-label">Goal Name</label>
+                            <input type="text" class="form-control" id="goalName" placeholder="e.g. Emergency Fund, Vacation, etc.">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="goalAmount" class="form-label">Target Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rs</span>
+                                <input type="number" class="form-control" id="goalAmount" step="1" placeholder="0">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="goalTargetDate" class="form-label">Target Date</label>
+                            <input type="date" class="form-control" id="goalTargetDate">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="goalInitialAmount" class="form-label">Initial Contribution (Optional)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rs</span>
+                                <input type="number" class="form-control" id="goalInitialAmount" step="1" placeholder="0">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="goalMonthlyAmount" class="form-label">Monthly Contribution</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rs</span>
+                                <input type="number" class="form-control" id="goalMonthlyAmount" step="1" placeholder="0">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="goalDescription" class="form-label">Description (Optional)</label>
+                            <textarea class="form-control" id="goalDescription" rows="3" placeholder="Describe your savings goal..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary">Create Goal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

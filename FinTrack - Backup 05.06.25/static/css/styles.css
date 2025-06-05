@@ -1,0 +1,348 @@
+/* FinTrack Main Stylesheet */
+/* testetstets */
+:root {
+    --pistachio: #85bb65;
+    --hunter-green: #2a6041;
+    --white: #ffffff;
+    --black: #000000
+    --yinmn-blue: #26547c;
+    --delft-blue: #1d2f6f;
+}
+
+/* Global Styles */
+body {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+.btn-primary {
+    background-color: var(--hunter-green);
+    border-color: var(--hunter-green);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: var(--delft-blue);
+    border-color: var(--delft-blue);
+}
+
+.btn-outline-primary {
+    color: var(--hunter-green);
+    border-color: var(--hunter-green);
+}
+
+.btn-outline-primary:hover, .btn-outline-primary:focus {
+    background-color: var(--hunter-green);
+    border-color: var(--hunter-green);
+    color: var(--white);
+}
+
+.card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem;
+    border-radius: 10px;
+}
+
+.card-header {
+    background-color: var(--white);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+}
+
+.form-label {
+    color: var(--delft-blue);
+    font-weight: 500;
+}
+
+/* Login/Register Pages */
+.login-container, .register-container {
+    max-width: 450px;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: var(--white);
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.register-container {
+    max-width: 500px;
+}
+
+.logo {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.logo h1 {
+    color: var(--hunter-green);
+    font-weight: 700;
+}
+
+.logo span {
+    color: var(--pistachio);
+}
+
+.login-footer, .register-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.login-footer a, .register-footer a {
+    color: var(--yinmn-blue);
+    text-decoration: none;
+}
+
+.login-footer a:hover, .register-footer a:hover {
+    color: var(--hunter-green);
+    text-decoration: underline;
+}
+
+.login-icon, .register-icon {
+    color: var(--pistachio);
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+/* Dashboard/Main Layout */
+.sidebar {
+    background-color: var(--delft-blue);
+    color: var(--white);
+    min-height: 100vh;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 0;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    width: 250px;
+}
+
+.sidebar-header {
+    padding: 1.5rem 1rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-weight: 700;
+}
+
+.sidebar-header span {
+    color: var(--pistachio);
+}
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.75);
+    border-radius: 0;
+    padding: 0.75rem 1.25rem;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--white);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link i {
+    margin-right: 0.75rem;
+}
+
+.main-content {
+    margin-left: 250px;
+    padding: 2rem;
+}
+
+.navbar {
+    background-color: var(--white);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+}
+
+.user-profile img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+/* Summary Cards */
+.summary-card {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.summary-card i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.summary-card .balance {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.summary-card .label {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.income-card i, .income-card .balance {
+    color: var(--pistachio);
+}
+
+.expense-card i, .expense-card .balance {
+    color: #dc3545;
+}
+
+.savings-card i, .savings-card .balance {
+    color: var(--yinmn-blue);
+}
+
+.balance-card i, .balance-card .balance {
+    color: var(--hunter-green);
+}
+
+/* Budget Progress */
+.progress {
+    height: 10px;
+    margin-top: 0.75rem;
+}
+
+.progress-bar {
+    background-color: var(--pistachio);
+}
+
+.progress-bar.danger {
+    background-color: #dc3545;
+}
+
+.progress-bar.warning {
+    background-color: #ffc107;
+}
+
+/* Transaction Styles */
+.transaction-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.transaction-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.transaction-item:hover {
+    background-color: rgba(0, 0, 0, 0.01);
+}
+
+.transaction-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    color: var(--white);
+    flex-shrink: 0;
+}
+
+.transaction-icon.income {
+    background-color: var(--pistachio);
+}
+
+.transaction-icon.expense {
+    background-color: #dc3545;
+}
+
+.transaction-details {
+    flex-grow: 1;
+}
+
+.transaction-category {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.transaction-date {
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-align: right;
+}
+
+.transaction-amount {
+    font-weight: 600;
+    text-align: right;
+    min-width: 100px;
+}
+
+.transaction-amount.income {
+    color: var(--pistachio);
+}
+
+.transaction-amount.expense {
+    color: #dc3545;
+}
+
+.transaction-actions {
+    visibility: hidden;
+    min-width: 80px;
+    text-align: right;
+}
+
+.transaction-item:hover .transaction-actions {
+    visibility: visible;
+}
+
+.transaction-actions .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+/* Transactions Page Specific */
+.filter-section {
+    background-color: var(--white);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.pagination {
+    margin-bottom: 0;
+}
+
+.page-link {
+    color: var(--hunter-green);
+}
+
+.page-item.active .page-link {
+    background-color: var(--hunter-green);
+    border-color: var(--hunter-green);
+}
+
+.modal-header {
+    background-color: var(--hunter-green);
+    color: var(--white);
+}
+
+.modal-header .btn-close {
+    color: var(--white);
+}
+
+/* Dashboard Transactions List */
+.card .transaction-item {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+}

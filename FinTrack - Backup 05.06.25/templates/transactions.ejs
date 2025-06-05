@@ -1,0 +1,562 @@
+<%- include('./partials/header.ejs') %>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white mb-4 rounded">
+            <div class="container-fluid">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <!-- Search is now part of the main filter form -->
+                    <div class="d-flex me-auto">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input form="transactionFiltersForm" class="form-control border-0 bg-light" type="search" 
+                                   name="search" id="searchInput" placeholder="Search transactions..." 
+                                   value="<%= filters ? filters.search : '' %>">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1">Transactions</h4>
+                <p class="text-muted mb-0">Manage and track all your financial activities</p>
+            </div>
+            <div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTransactionModal">
+                    <i class="bi bi-plus-lg"></i> Add Transaction
+                </button>
+            </div>
+        </div>
+
+        <% 
+        // Helper function for creating query strings in pagination links
+        function createQueryString(filters, page) {
+            if (!filters) return '';
+            
+            let queryString = '';
+            if (filters.search) queryString += '&search=' + encodeURIComponent(filters.search);
+            if (filters.dateRange) queryString += '&dateRange=' + encodeURIComponent(filters.dateRange);
+            if (filters.customStartDate) queryString += '&customStartDate=' + encodeURIComponent(filters.customStartDate);
+            if (filters.customEndDate) queryString += '&customEndDate=' + encodeURIComponent(filters.customEndDate);
+            if (filters.transactionType) queryString += '&transactionType=' + encodeURIComponent(filters.transactionType);
+            if (filters.category) queryString += '&category=' + encodeURIComponent(filters.category);
+            if (filters.sortBy) queryString += '&sortBy=' + encodeURIComponent(filters.sortBy);
+            
+            return queryString;
+        }
+        %>
+
+        <!-- Filters -->
+        <!--  <div class="filter-section">
+            <form id="transactionFiltersForm" action="/transactions" method="GET"> -->
+                <!-- Hidden search field (main search field is in the navbar) -->
+                <!-- <input type="hidden" id="searchHidden" name="search" value="<%= filters ? filters.search : '' %>">
+                
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="dateRange" class="form-label">Date Range</label>
+                        <select class="form-select" id="dateRange" name="dateRange" onchange="toggleCustomDateFields()">
+                            <option value="last30days" <%= filters && filters.dateRange === 'last30days' ? 'selected' : '' %>>Last 30 days</option>
+                            <option value="thisMonth" <%= filters && filters.dateRange === 'thisMonth' ? 'selected' : '' %>>This month</option>
+                            <option value="lastMonth" <%= filters && filters.dateRange === 'lastMonth' ? 'selected' : '' %>>Last month</option>
+                            <option value="thisYear" <%= filters && filters.dateRange === 'thisYear' ? 'selected' : '' %>>This year</option>
+                            <option value="customRange" <%= filters && filters.dateRange === 'customRange' ? 'selected' : '' %>>Custom range</option>
+                        </select>
+                    </div> -->
+                    
+                    <!-- Custom Date Range Fields (initially hidden) -->
+                    <!-- <div class="col-md-3" id=" customStartDateContainer" style="<%= filters && filters.dateRange === 'customRange' ? '' : 'display: none;' %>">
+                        <label for="customStartDate" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="customStartDate" name="customStartDate" 
+                               value="<%= filters && filters.customStartDate ? filters.customStartDate : '' %>">
+                    </div>
+                    <div class="col-md-3" id="customEndDateContainer" style="<%= filters && filters.dateRange === 'customRange' ? '' : 'display: none;' %>">
+                        <label for="customEndDate" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="customEndDate" name="customEndDate"
+                               value="<%= filters && filters.customEndDate ? filters.customEndDate : '' %>">
+                    </div>
+                    
+                    <div class="col-md-3" id="typeFilterContainer" style="<%= filters && filters.dateRange === 'customRange' ? 'display: none;' : '' %>">
+                        <label for="transactionType" class="form-label">Type</label>
+                        <select class="form-select" id="transactionType" name="transactionType">
+                            <option value="All" <%= filters && filters.transactionType === 'All' ? 'selected' : '' %>>All</option>
+                            <option value="Income" <%= filters && filters.transactionType === 'Income' ? 'selected' : '' %>>Income</option>
+                            <option value="Expense" <%= filters && filters.transactionType === 'Expense' ? 'selected' : '' %>>Expense</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3" id="categoryFilterContainer" style="<%= filters && filters.dateRange === 'customRange' ? 'display: none;' : '' %>">
+                        <label for="category" class="form-label">Category</label>
+                        <select class="form-select" id="category" name="category">
+                            <option value="All Categories" <%= filters && filters.category === 'All Categories' ? 'selected' : '' %>>All Categories</option>
+                            <option value="Food & Dining" <%= filters && filters.category === 'Food & Dining' ? 'selected' : '' %>>Food & Dining</option>
+                            <option value="Shopping" <%= filters && filters.category === 'Shopping' ? 'selected' : '' %>>Shopping</option>
+                            <option value="Housing" <%= filters && filters.category === 'Housing' ? 'selected' : '' %>>Housing</option>
+                            <option value="Transportation" <%= filters && filters.category === 'Transportation' ? 'selected' : '' %>>Transportation</option>
+                            <option value="Entertainment" <%= filters && filters.category === 'Entertainment' ? 'selected' : '' %>>Entertainment</option>
+                            <option value="Utilities" <%= filters && filters.category === 'Utilities' ? 'selected' : '' %>>Utilities</option>
+                            <option value="Income" <%= filters && filters.category === 'Income' ? 'selected' : '' %>>Income</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3" id="sortByContainer">
+                        <label for="sortBy" class="form-label">Sort By</label>
+                        <select class="form-select" id="sortBy" name="sortBy">
+                            <option value="newestFirst" <%= filters && filters.sortBy === 'newestFirst' ? 'selected' : '' %>>Newest First</option>
+                            <option value="oldestFirst" <%= filters && filters.sortBy === 'oldestFirst' ? 'selected' : '' %>>Oldest First</option>
+                            <option value="amountHighToLow" <%= filters && filters.sortBy === 'amountHighToLow' ? 'selected' : '' %>>Amount (High to Low)</option>
+                            <option value="amountLowToHigh" <%= filters && filters.sortBy === 'amountLowToHigh' ? 'selected' : '' %>>Amount (Low to High)</option>
+                        </select>
+                    </div>
+                    <div class="col-12 mt-3">
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                        <button type="button" class="btn btn-outline-secondary ms-2" onclick="resetFilters()">Reset</button>
+                    </div>
+                </div>
+            </form>
+        </div> -->
+
+        <!-- Transactions List -->
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        Transaction History
+                    </div>
+                    <div class="col text-end">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-file-earmark-excel"></i> CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pagination Info -->
+            <div class="d-flex justify-content-between align-items-center px-3 pt-3">
+                <div>
+                    <% const start = (currentPage - 1) * 15 + 1; %>
+                    <% const end = Math.min(start + 14, totalTransactions); %>
+                    <small class="text-muted">Showing <%= start %>-<%= end %> of <%= totalTransactions %> transactions</small>
+                </div>
+                <div>
+                    <small class="text-muted">Page <%= currentPage %> of <%= totalPages %></small>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <!-- Transaction Items -->
+                <% if (transactions.length === 0) { %>
+                    <div class="text-center py-5">
+                        <p class="text-muted">No transactions found</p>
+                    </div>
+                <% } else { %>
+                    <% transactions.forEach(transaction => { %>
+                    <div class="transaction-item">
+                        <div class="transaction-icon <%= transaction.transactiontype === '-' ? 'expense' : 'income' %>">
+                            <% 
+                            // Set appropriate icon based on category
+                            let iconClass = "bi-cart"; // Default icon
+                            
+                            switch(transaction.transactioncategory) {
+                                case "Food & Dining":
+                                    iconClass = "bi-cup-hot";
+                                    break;
+                                case "Shopping":
+                                    iconClass = "bi-bag";
+                                    break;
+                                case "Housing":
+                                    iconClass = "bi-house";
+                                    break;
+                                case "Transportation":
+                                    iconClass = "bi-bus-front";
+                                    break;
+                                case "Entertainment":
+                                    iconClass = "bi-film";
+                                    break;
+                                case "Utilities":
+                                    iconClass = "bi-lightning";
+                                    break;
+                                case "Income":
+                                    iconClass = "bi-bank";
+                                    break;
+                                default:
+                                    iconClass = "bi-cart"; // Default fallback
+                            }
+                            %>
+                            <i class="bi <%= iconClass %>"></i>
+                        </div>
+                        <div class="transaction-details">
+                            <div class="fw-bold"><%- transaction.transactiontitle %></div>
+                            <div class="transaction-category"><%- transaction.transactioncategory %></div>
+                        </div>
+                        <div class="transaction-date">
+                            <%- new Date(transaction.transactiondate).toLocaleDateString('en-GB', {day: '2-digit', month: 'long', year: 'numeric'}) %>
+                        </div>
+                        <div class="transaction-amount <%= transaction.transactiontype === '-' ? 'expense' : 'income' %>">
+                            <%- transaction.transactiontype %>Rs <%- transaction.transactionamount %> 
+                        </div>
+                        <div class="transaction-actions">
+                            <!-- Modified to use the editTransaction function with the correct ID -->
+                            <button class="btn btn-sm btn-outline-secondary me-1" onclick="editTransaction('<%- transaction._id %>')">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <a class="btn btn-sm btn-outline-danger" href="/delete-transactions/<%- transaction._id %>">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <% }) %>
+                <% } %>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div class="card-footer">
+                <nav>
+                    <ul class="pagination justify-content-center">
+                        <!-- Previous button -->
+                        <li class="page-item <%= hasPrevPage ? '' : 'disabled' %>">
+                            <a class="page-link" href="<%= hasPrevPage ? '/transactions?page=' + prevPage + createQueryString(filters, prevPage) : '#' %>" tabindex="-1" <%= !hasPrevPage ? 'aria-disabled="true"' : '' %>>Previous</a>
+                        </li>
+                        
+                        <!-- Page numbers with ellipsis for large page counts -->
+                        <% 
+                        let startPage = Math.max(1, currentPage - 2);
+                        let endPage = Math.min(totalPages, currentPage + 2);
+                        
+                        // Ensure we always show 5 pages if possible
+                        if (endPage - startPage < 4 && totalPages > 5) {
+                            if (startPage === 1) {
+                                endPage = Math.min(5, totalPages);
+                            } else {
+                                startPage = Math.max(1, totalPages - 4);
+                            }
+                        }
+                        %>
+                        
+                        <!-- First page and ellipsis if needed -->
+                        <% if (startPage > 1) { %>
+                            <li class="page-item">
+                                <a class="page-link" href="/transactions?page=1<%= createQueryString(filters, 1) %>">1</a>
+                            </li>
+                            <% if (startPage > 2) { %>
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#">...</a>
+                                </li>
+                            <% } %>
+                        <% } %>
+                        
+                        <!-- Main pagination numbers -->
+                        <% for (let i = startPage; i <= endPage; i++) { %>
+                            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                <a class="page-link" href="/transactions?page=<%= i %><%= createQueryString(filters, i) %>"><%= i %></a>
+                            </li>
+                        <% } %>
+                        
+                        <!-- Last page and ellipsis if needed -->
+                        <% if (endPage < totalPages) { %>
+                            <% if (endPage < totalPages - 1) { %>
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#">...</a>
+                                </li>
+                            <% } %>
+                            <li class="page-item">
+                                <a class="page-link" href="/transactions?page=<%= totalPages %><%= createQueryString(filters, totalPages) %>"><%= totalPages %></a>
+                            </li>
+                        <% } %>
+                        
+                        <!-- Next button -->
+                        <li class="page-item <%= hasNextPage ? '' : 'disabled' %>">
+                            <a class="page-link" href="<%= hasNextPage ? '/transactions?page=' + nextPage + createQueryString(filters, nextPage) : '#' %>" <%= !hasNextPage ? 'aria-disabled="true"' : '' %>>Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Update Transaction Modal - Modified to use dynamic loading -->
+    <div class="modal fade" id="updateTransactionModal" tabindex="-1" aria-labelledby="updateTransactionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateTransactionModalLabel">Update Transaction</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- form -->
+                    <form action="/transactions/update-transactions" method="POST">
+                        <input type="hidden" id="transactionId" name="transactionId" value="">
+                        
+                        <div class="mb-3">
+                            <label for="transactiontitle" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="transactiontitle" name="transactiontitle">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="transactionamount" class="form-label">Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rs</span>
+                                <input type="number" class="form-control" id="transactionamount" name="transactionamount" step="1" placeholder="0">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Type</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="transactiontype" id="expenseType" value="-">
+                                <label class="form-check-label" for="expenseType">
+                                    Expense
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="transactiontype" id="incomeType" value="+">
+                                <label class="form-check-label" for="incomeType">
+                                    Income
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="transactioncategory" class="form-label">Category</label>
+                            <select class="form-select" id="transactioncategory" name="transactioncategory">
+                                <option disabled selected>Select a category</option>
+                                <option value="Food & Dining">Food & Dining</option>
+                                <option value="Shopping">Shopping</option>
+                                <option value="Housing">Housing</option>
+                                <option value="Transportation">Transportation</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Utilities">Utilities</option>
+                                <option value="Income">Income</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="transactiondate" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="transactiondate" name="transactiondate">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="transactionnote" class="form-label">Note (Optional)</label>
+                            <textarea class="form-control" id="transactionnote" name="transactionnote" rows="3" placeholder="Add any additional details here..."></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Transaction</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Transaction Modal -->
+    <div class="modal fade" id="addTransactionModal" tabindex="-1" aria-labelledby="addTransactionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addTransactionModalLabel">Add New Transaction</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- form -->
+                    <form action="/transactions/AddTransactions" method="POST">
+                        <div class="mb-3">
+                            <label for="transactionTitle" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="transactiontitle" name="transactiontitle" placeholder="e.g. Name of shop">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="transactionamount" class="form-label">Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rs</span>
+                                <input type="number" class="form-control" id="transactionamount" name="transactionamount" step="1" placeholder="0">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Type</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="transactiontype" id="expenseType" value="-" checked>
+                                <label class="form-check-label" for="expenseType">
+                                    Expense
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="transactiontype" id="incomeType" value="+">
+                                <label class="form-check-label" for="incomeType">
+                                    Income
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="transactioncategory" class="form-label">Category</label>
+                            <select class="form-select" id="transactioncategory" name="transactioncategory">
+                                <option selected disabled>Select a category</option>
+                                <option>Food & Dining</option>
+                                <option>Shopping</option>
+                                <option>Housing</option>
+                                <option>Transportation</option>
+                                <option>Entertainment</option>
+                                <option>Utilities</option>
+                                <option>Income</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="transactiondate" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="transactiondate" name="transactiondate">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="transactionnote" class="form-label">Note (Optional)</label>
+                            <textarea class="form-control" id="transactionnote" name="transactionnote" rows="3" placeholder="Add any additional details here..."></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Transaction</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- JavaScript to handle editing transactions and filters -->
+    <script>
+    // Function to edit transaction
+    function editTransaction(transactionId) {
+        // Fetch transaction data
+        fetch(`/edit-transaction/${transactionId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(transaction => {
+                // Populate form fields
+                document.getElementById('transactionId').value = transaction._id;
+                document.getElementById('transactiontitle').value = transaction.transactiontitle;
+                document.getElementById('transactionamount').value = transaction.transactionamount;
+                
+                // Set transaction type radio button
+                if (transaction.transactiontype === '+') {
+                    document.getElementById('incomeType').checked = true;
+                } else {
+                    document.getElementById('expenseType').checked = true;
+                }
+                
+                // Set category
+                const categorySelect = document.getElementById('transactioncategory');
+                for (let i = 0; i < categorySelect.options.length; i++) {
+                    if (categorySelect.options[i].value === transaction.transactioncategory) {
+                        categorySelect.selectedIndex = i;
+                        break;
+                    }
+                }
+                
+                // Set date - convert to YYYY-MM-DD format for the date input
+                if (transaction.transactiondate) {
+                    const date = new Date(transaction.transactiondate);
+                    const formattedDate = date.toISOString().split('T')[0];
+                    document.getElementById('transactiondate').value = formattedDate;
+                }
+                
+                // Set note
+                if (transaction.transactionnote) {
+                    document.getElementById('transactionnote').value = transaction.transactionnote;
+                }
+                
+                // Show the modal
+                const modal = new bootstrap.Modal(document.getElementById('updateTransactionModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Error fetching transaction:', error);
+                alert('Failed to load transaction data');
+            });
+    }
+    
+    // Function to show/hide custom date range fields
+    function toggleCustomDateFields() {
+        const dateRange = document.getElementById('dateRange').value;
+        const customStartDateContainer = document.getElementById('customStartDateContainer');
+        const customEndDateContainer = document.getElementById('customEndDateContainer');
+        const typeFilterContainer = document.getElementById('typeFilterContainer');
+        const categoryFilterContainer = document.getElementById('categoryFilterContainer');
+        
+        if (dateRange === 'customRange') {
+            customStartDateContainer.style.display = 'block';
+            customEndDateContainer.style.display = 'block';
+            
+            // Adjust layout for custom date range
+            typeFilterContainer.style.display = 'none';
+            categoryFilterContainer.style.display = 'none';
+        } else {
+            customStartDateContainer.style.display = 'none';
+            customEndDateContainer.style.display = 'none';
+            
+            // Restore normal layout
+            typeFilterContainer.style.display = 'block';
+            categoryFilterContainer.style.display = 'block';
+        }
+    }
+    
+    // Function to submit the filter form
+    function submitForm() {
+        // Sync the hidden search field with the visible one
+        document.getElementById('searchHidden').value = document.getElementById('searchInput').value;
+        document.getElementById('transactionFiltersForm').submit();
+    }
+    
+    // Function to reset all filters
+    function resetFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('searchHidden').value = '';
+        document.getElementById('dateRange').selectedIndex = 0;
+        document.getElementById('transactionType').selectedIndex = 0;
+        document.getElementById('category').selectedIndex = 0;
+        document.getElementById('sortBy').selectedIndex = 0;
+        document.getElementById('customStartDate').value = '';
+        document.getElementById('customEndDate').value = '';
+        toggleCustomDateFields(); // Reset UI state
+        document.getElementById('transactionFiltersForm').submit();
+    }
+    
+    // Ensure the search field syncs with the hidden field
+    document.getElementById('searchInput').addEventListener('input', function() {
+        document.getElementById('searchHidden').value = this.value;
+    });
+    
+    // Submit form when user presses Enter in the search field
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            submitForm();
+        }
+    });
+    
+    // Initialize custom date fields visibility
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleCustomDateFields();
+    });
+    </script>
+</body>
+</html>

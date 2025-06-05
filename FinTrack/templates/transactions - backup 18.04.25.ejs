@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack - Transactions</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" style="width: 250px;">
+        <div class="sidebar-header">
+            <h3>Fin<span>Track</span></h3>
+        </div>
+        <ul class="nav flex-column mt-4">
+            <li class="nav-item">
+                <a class="nav-link" href="/#">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="/transactions">
+                    <i class="bi bi-credit-card"></i> Transactions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/budget">
+                    <i class="bi bi-graph-up"></i> Budget
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/reports">
+                    <i class="bi bi-bar-chart"></i> Reports
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/savingsgoals">
+                    <i class="bi bi-piggy-bank"></i> Savings Goals
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/settings">
+                    <i class="bi bi-gear"></i> Settings
+                </a>
+            </li>
+            <li class="nav-item mt-5">
+                <a class="nav-link" href="/login">
+                    <i class="bi bi-box-arrow-left"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white mb-4 rounded">
+            <div class="container-fluid">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <form class="d-flex me-auto">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input class="form-control border-0 bg-light" type="search" placeholder="Search transactions...">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1">Transactions</h4>
+                <p class="text-muted mb-0">Manage and track all your financial activities</p>
+            </div>
+            <div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTransactionModal">
+                    <i class="bi bi-plus-lg"></i> Add Transaction
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="dateRange" class="form-label">Date Range</label>
+                    <select class="form-select" id="dateRange">
+                        <option selected>Last 30 days</option>
+                        <option>This month</option>
+                        <option>Last month</option>
+                        <option>This year</option>
+                        <option>Custom range</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="transactionType" class="form-label">Type</label>
+                    <select class="form-select" id="transactionType">
+                        <option selected>All</option>
+                        <option>Income</option>
+                        <option>Expense</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="category" class="form-label">Category</label>
+                    <select class="form-select" id="category">
+                        <option selected>All Categories</option>
+                        <option>Food & Dining</option>
+                        <option>Shopping</option>
+                        <option>Housing</option>
+                        <option>Transportation</option>
+                        <option>Entertainment</option>
+                        <option>Utilities</option>
+                        <option>Income</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="sortBy" class="form-label">Sort By</label>
+                    <select class="form-select" id="sortBy">
+                        <option selected>Newest First</option>
+                        <option>Oldest First</option>
+                        <option>Amount (High to Low)</option>
+                        <option>Amount (Low to High)</option>
+                    </select>
+                </div>
+                <div class="col-12 mt-3">
+                    <button class="btn btn-primary">Apply Filters</button>
+                    <button class="btn btn-outline-secondary ms-2">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions List -->
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        Transaction History
+                    </div>
+                    <div class="col text-end">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-file-earmark-excel"></i> CSV
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-file-earmark-pdf"></i> PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <!-- Transaction Item -->
+                <!-- should populate this section with data from db -->
+                
+                <% var id=0; %> 
+                <% transactions.forEach(transaction => { %>
+                <div class="transaction-item">
+                    <!-- <div class="transaction-icon expense">
+                        <i class="bi bi-cart"></i>
+                    </div> -->
+                    <div class="transaction-details">
+                        <div class="fw-bold"><%- transaction.transactiontitle %></div>
+                        <div class="transaction-category"><%- transaction.transactioncategory %></div>
+                    </div>
+                    <div class="transaction-date">
+                        <!-- <%- transaction.transactiondate %>  -->
+                        <%- new Date(transaction.transactiondate).toLocaleDateString('en-GB', {day: '2-digit', month: 'long', year: 'numeric'}) %>
+                    </div>
+                    <div class="transaction-amount <%= transaction.transactiontype === '-' ? 'expense' : 'income' %>">
+                        <%- transaction.transactiontype %> Rs <%- transaction.transactionamount %> 
+                    </div>
+                    <div class="transaction-actions">
+                        <button class="btn btn-sm btn-outline-secondary me-1">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <% id++; }) %>
+
+                    <!-- <div class="transaction-icon expense">
+                        <i class="bi bi-cart"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="fw-bold">Grocery Shopping</div>
+                        <div class="transaction-category">Food & Dining</div>
+                    </div>
+                    <div class="transaction-date">
+                        4 April 2025
+                    </div>
+                    <div class="transaction-amount expense">
+                        -Rs 3,450
+                    </div>
+                    <div class="transaction-actions">
+                        <button class="btn btn-sm btn-outline-secondary me-1">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-icon income">
+                        <i class="bi bi-briefcase"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="fw-bold">Salary Deposit</div>
+                        <div class="transaction-category">Income</div>
+                    </div>
+                    <div class="transaction-date">
+                        3 April 2025
+                    </div>
+                    <div class="transaction-amount income">
+                        +Rs 90,000
+                    </div>
+                    <div class="transaction-actions">
+                        <button class="btn btn-sm btn-outline-secondary me-1">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-icon expense">
+                        <i class="bi bi-lightning"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="fw-bold">Electricity Bill</div>
+                        <div class="transaction-category">Utilities</div>
+                    </div>
+                    <div class="transaction-date">
+                        1 April 2025
+                    </div>
+                    <div class="transaction-amount expense">
+                        -Rs 3,780
+                    </div>
+                    <div class="transaction-actions">
+                        <button class="btn btn-sm btn-outline-secondary me-1">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-icon expense">
+                        <i class="bi bi-cup-hot"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="fw-bold">Coffee Shop</div>
+                        <div class="transaction-category">Food & Dining</div>
+                    </div>
+                    <div class="transaction-date">
+                        30 March 2025
+                    </div>
+                    <div class="transaction-amount expense">
+                        -Rs 230
+                    </div>
+                    <div class="transaction-actions">
+                        <button class="btn btn-sm btn-outline-secondary me-1">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-icon expense">
+                        <i class="bi bi-film"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="fw-bold">Movie Tickets</div>
+                        <div class="transaction-category">Entertainment</div>
+                    </div>
+                    <div class="transaction-date">
+                        27 March 2025
+                    </div>
+                    <div class="transaction-amount expense">
+                        -Rs 1,280
+                    </div>
+                    <div class="transaction-actions">
+                        <button class="btn btn-sm btn-outline-secondary me-1">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-icon expense">
+                        <i class="bi bi-fuel-pump"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="fw-bold">Gas Station</div>
+                        <div class="transaction-category">Transportation</div>
+                    </div>
+                    <div class="transaction-date">
+                        25 March 2025
+                    </div>
+                    <div class="transaction-amount expense">
+                        -Rs 1,812
+                    </div>
+                    <div class="transaction-actions">
+                        <button class="btn btn-sm btn-outline-secondary me-1">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-icon expense">
+                        <i class="bi bi-house"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="fw-bold">Rent Payment</div>
+                        <div class="transaction-category">Housing</div>
+                    </div>
+                    <div class="transaction-date">
+                        20 March 2025
+                    </div>
+                    <div class="transaction-amount expense">
+                        -Rs 48,000
+                    </div>
+                    <div class="transaction-actions">
+                        <button class="btn btn-sm btn-outline-secondary me-1">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-icon income">
+                        <i class="bi bi-bank"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="fw-bold">Freelance Payment</div>
+                        <div class="transaction-category">Income</div>
+                    </div>
+                    <div class="transaction-date">
+                        15 March 2025
+                    </div>
+                    <div class="transaction-amount income">
+                        +Rs 14,000
+                    </div>
+                    <div class="transaction-actions">
+                        <button class="btn btn-sm btn-outline-secondary me-1">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div> -->
+            <div class="card-footer">
+                <nav>
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div class="modal fade" id="addTransactionModal" tabindex="-1" aria-labelledby="addTransactionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addTransactionModalLabel">Add New Transaction</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- form -->
+                    <form action="/transactions/AddTransactions" method="POST">
+                        <div class="mb-3">
+                            <label for="transactionTitle" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="transactiontitle" name="transactiontitle" placeholder="e.g. Name of shop">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="transactionamount" class="form-label">Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rs</span>
+                                <input type="number" class="form-control" id="transactionamount" name="transactionamount" step="1" placeholder="0">
+                            </div>
+                        </div>
+                        
+                        <!-- <div class="mb-3">
+                            <label class="form-label">Type</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="transactiontype" id="transactionype" checked>
+                                <label class="form-check-label" for="transactiontype">
+                                    Expense
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="transactiontype" id="incomeType">
+                                <label class="form-check-label" for="incomeType">
+                                    Income
+                                </label>
+                            </div>
+                        </div> -->
+                        <div class="mb-3">
+                            <label class="form-label">Type</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="transactiontype" id="expenseType" value="-" checked>
+                                <label class="form-check-label" for="expenseType">
+                                    Expense
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="transactiontype" id="incomeType" value="+">
+                                <label class="form-check-label" for="incomeType">
+                                    Income
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="transactioncategory" class="form-label">Category</label>
+                            <select class="form-select" id="transactioncategory" name="transactioncategory">
+                                <option selected disabled>Select a category</option>
+                                <option>Food & Dining</option>
+                                <option>Shopping</option>
+                                <option>Housing</option>
+                                <option>Transportation</option>
+                                <option>Entertainment</option>
+                                <option>Utilities</option>
+                                <option>Income</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="transactiondate" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="transactiondate" name="transactiondate">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="transactionnote" class="form-label">Note (Optional)</label>
+                            <textarea class="form-control" id="transactionnote" name="transactionnote"rows="3" placeholder="Add any additional details here..."></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Transaction</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary">Save Transaction</button>
+                </div> -->
+            </div>
+        </div>
+    </div>
+    <!-- Add Transaction Modal -->
+    <div class="modal fade" id="addTransactionModal" tabindex="-1" aria-labelledby="addTransactionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addTransactionModalLabel">Add Transaction</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="TransactionCategory" class="form-label">Category</label>
+                            <select class="form-select" id="TransactionCategory">
+                                <option selected disabled>Select a category</option>
+                                <option>Food & Dining</option>
+                                <option>Entertainment</option>
+                                <option>Transportation</option>
+                                <option>Shopping</option>
+                                <option>Housing</option>
+                                <option>Utilities</option>
+                                <option>Travel</option>
+                                <option>Education</option>
+                                <option>Health & Fitness</option>
+                                <option>Personal Care</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="TransactionAmount" class="form-label">Transaction Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rs</span>
+                                <input type="number" class="form-control" id="TransactionAmount" step="1" placeholder="0">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="TransactionDate" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="TransactionDate">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="TransactionNote" class="form-label">Note (Optional)</label>
+                            <textarea class="form-control" id="transactionNote" rows="3" placeholder="Add any notes or details about this transaction..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary">Create Budget</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Bootstrap Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

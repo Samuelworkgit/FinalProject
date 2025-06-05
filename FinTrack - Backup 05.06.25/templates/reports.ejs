@@ -1,0 +1,247 @@
+<%- include('./partials/header.ejs') %>
+
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white mb-4 rounded">
+            <div class="container-fluid">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <form class="d-flex me-auto">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input class="form-control border-0 bg-light" type="search" placeholder="Search reports...">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1">Financial Reports</h4>
+                <p class="text-muted">Analyze your financial performance</p>
+            </div>
+            <div>
+                <div class="btn-group">
+                    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-download"></i> Extract
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-file-earmark-pdf"></i> PDF Report</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-file-earmark-excel"></i> Excel Export</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-file-earmark-text"></i> CSV Export</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Date Range Filter -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="reportType" class="form-label">Report Type</label>
+                        <select class="form-select" id="reportType">
+                            <option selected>Income vs Expenses</option>
+                            <option>Spending by Category</option>
+                            <option>Monthly Cash Flow</option>
+                            <option>Budget Performance</option>
+                            <option>Savings Progress</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="reportPeriod" class="form-label">Time Period</label>
+                        <select class="form-select" id="reportPeriod">
+                            <option>This Month</option>
+                            <option>Last Month</option>
+                            <option selected>Last 3 Months</option>
+                            <option>Last 6 Months</option>
+                            <option>Year to Date</option>
+                            <option>Last Year</option>
+                            <option>Custom Range</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button class="btn btn-primary w-100">Generate Report</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Financial Overview -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Financial Status (Last 3 Months)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card summary-card income-card">
+                            <i class="bi bi-arrow-down-circle"></i>
+                            <div class="balance">Rs <%- totalincome %></div>
+                            <div>Total Income</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card summary-card expense-card">
+                            <i class="bi bi-arrow-up-circle"></i>
+                            <div class="balance">Rs <%- totalexpenses %></div>
+                            <div>Total Expenses</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card summary-card savings-card">
+                            <i class="bi bi-piggy-bank"></i>
+                            <div class="balance">Rs <%- netsavings %></div>
+                            <div>Net Savings</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card summary-card balance-card">
+                            <i class="bi bi-percent"></i>
+                            <div class="balance"><%- savingsrate %></div>
+                            <div>Savings Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Income vs Expenses Chart -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Income vs Expenses (Last 3 Months)</h5>
+            </div>
+            <div class="card-body">
+                <!-- Placeholder for chart - would be replaced with actual chart in real implementation -->
+                <div style="height: 300px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                    <p class="text-muted">Income vs Expenses Chart</p>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 15px; height: 15px; background-color: #85bb65; margin-right: 8px;"></div>
+                            <div>Income</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 15px; height: 15px; background-color: #dc3545; margin-right: 8px;"></div>
+                            <div>Expenses</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 15px; height: 15px; background-color: #26547c; margin-right: 8px;"></div>
+                            <div>Net Savings</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense Breakdown Chart -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Expense Breakdown by Category</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- Placeholder for chart - would be replaced with actual chart in real implementation -->
+                        <div style="height: 300px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                            <p class="text-muted">Expense Breakdown Pie Chart</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Top Expense Categories</h6>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Housing</span>
+                                <span>Rs 144,000 (51.3%)</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 51.3%; background-color: #FF9E80;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Food & Dining</span>
+                                <span>Rs 54,000 (19.2%)</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 19.2%; background-color: #80D8FF;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Transportation</span>
+                                <span>Rs 36,000 (12.8%)</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 12.8%; background-color: #B388FF;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Utilities</span>
+                                <span>Rs 18,000 (6.4%)</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 6.4%; background-color: #CCFF90;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Entertainment</span>
+                                <span>Rs 15,600 (5.6%)</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 5.6%; background-color: #FFFF8D;"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="d-flex justify-content-between">
+                                <span>Other</span>
+                                <span>Rs 13,200 (4.7%)</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 4.7%; background-color: #84FFFF;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Monthly Trend Chart -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Monthly Cash Flow Trend</h5>
+            </div>
+            <div class="card-body">
+                <!-- Placeholder for chart - would be replaced with actual chart in real implementation -->
+                <div style="height: 300px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                    <p class="text-muted">Monthly Cash Flow Chart</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

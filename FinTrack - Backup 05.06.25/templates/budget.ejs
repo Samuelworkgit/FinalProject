@@ -1,0 +1,252 @@
+<%- include('./partials/header.ejs') %>
+
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white mb-4 rounded">
+            <div class="container-fluid">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <form class="d-flex me-auto">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input class="form-control border-0 bg-light" type="search" placeholder="Search budgets...">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1">Budget Management</h4>
+                <p class="text-muted">Manage your monthly spending limits</p>
+            </div>
+            <div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBudgetModal">
+                    <i class="bi bi-plus-lg"></i> Create New Budget
+                </button>
+            </div>
+        </div>
+
+        <!-- Budget Summary -->
+        <div class="card mb-4">
+            <div class="card-header">
+                Monthly Budget Summary
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card summary-card">
+                            <i class="bi bi-wallet2"></i>
+                            <div class="balance">Rs <%- totalbudgetamount %></div>
+                            <div>Total Budget Amount</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card summary-card">
+                            <i class="bi bi-currency-exchange"></i>
+                            <div class="balance">Rs <%- spentsofar %></div>
+                            <div>Spent So Far</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card summary-card">
+                            <i class="bi bi-cash-coin"></i>
+                            <div class="balance">Rs <%- remianing %></div>
+                            <div>Remaining</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget Categories -->
+        <div class="card">
+            <div class="card-header">
+                Budget Categories
+            </div>
+            <div class="card-body">
+                <!-- Food & Dining Budget -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <div>
+                                <h5 class="mb-0"><i class="bi bi-basket me-2"></i> Food & Dining</h5>
+                                <div class="small text-muted">Monthly budget for groceries, restaurants, etc.</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold">Rs 18,000 / Rs 24,000</div>
+                                <div class="small text-muted">75% used</div>
+                            </div>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 75%"></div>
+                        </div>
+                        <div class="d-flex justify-content-end mt-2">
+                            <button class="btn btn-sm btn-outline-secondary me-2">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Entertainment Budget -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <div>
+                                <h5 class="mb-0"><i class="bi bi-film me-2"></i> Entertainment</h5>
+                                <div class="small text-muted">Movies, events, streaming services</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold">Rs 8,800 / Rs 8,000</div>
+                                <div class="small text-muted text-danger">110% used - over budget!</div>
+                            </div>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar danger" role="progressbar" style="width: 110%"></div>
+                        </div>
+                        <div class="d-flex justify-content-end mt-2">
+                            <button class="btn btn-sm btn-outline-secondary me-2">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transportation Budget -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <div>
+                                <h5 class="mb-0"><i class="bi bi-car-front me-2"></i> Transportation</h5>
+                                <div class="small text-muted">Fuel, public transport, car maintenance</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold">Rs 7,600 / Rs 12,000</div>
+                                <div class="small text-muted">63% used</div>
+                            </div>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 63%"></div>
+                        </div>
+                        <div class="d-flex justify-content-end mt-2">
+                            <button class="btn btn-sm btn-outline-secondary me-2">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shopping Budget -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <div>
+                                <h5 class="mb-0"><i class="bi bi-bag me-2"></i> Shopping</h5>
+                                <div class="small text-muted">Clothing, electronics, home goods</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold">Rs 12,800 / Rs 14,000</div>
+                                <div class="small text-muted">91% used</div>
+                            </div>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar warning" role="progressbar" style="width: 91%"></div>
+                        </div>
+                        <div class="d-flex justify-content-end mt-2">
+                            <button class="btn btn-sm btn-outline-secondary me-2">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Utilities Budget -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <div>
+                                <h5 class="mb-0"><i class="bi bi-lightning me-2"></i> Utilities</h5>
+                                <div class="small text-muted">Electricity, water, internet, phone</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold">Rs 4,980 / Rs 6,000</div>
+                                <div class="small text-muted">83% used</div>
+                            </div>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 83%"></div>
+                        </div>
+                        <div class="d-flex justify-content-end mt-2">
+                            <button class="btn btn-sm btn-outline-secondary me-2">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Budget Modal -->
+    <div class="modal fade" id="addBudgetModal" tabindex="-1" aria-labelledby="addBudgetModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addBudgetModalLabel">Create New Budget</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="budgetCategory" class="form-label">Category</label>
+                            <select class="form-select" id="budgetCategory">
+                                <option selected disabled>Select a category</option>
+                                <option>Food & Dining</option>
+                                <option>Entertainment</option>
+                                <option>Transportation</option>
+                                <option>Shopping</option>
+                                <option>Housing</option>
+                                <option>Utilities</option>
+                                <option>Travel</option>
+                                <option>Education</option>
+                                <option>Health & Fitness</option>
+                                <option>Personal Care</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="budgetAmount" class="form-label">Monthly Budget Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rs</span>
+                                <input type="number" class="form-control" id="budgetAmount" step="1" placeholder="0">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="budgetStartDate" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="budgetStartDate">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="budgetNote" class="form-label">Note (Optional)</label>
+                            <textarea class="form-control" id="budgetNote" rows="3" placeholder="Add any notes or details about this budget..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary">Create Budget</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
