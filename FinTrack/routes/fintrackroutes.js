@@ -3,6 +3,10 @@ const Transactions = require('../models/transactions');
 const User = require('../models/user');
 const Budget = require('../models/budget');
 const SavingsGoal = require('../models/savingsgoal');
+const Report = require('../models/report');
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const path = require('path');
 
 const express = require('express');
 const router = express.Router();
@@ -775,23 +779,325 @@ router.get('/reports', requireAuth, async function(req, res) {
             }
         ]);
         
+        // Get expense breakdown by category
+        const expenseBreakdown = await Transactions.aggregate([
+            {
+                $match: {
+                    userId: new mongoose.Types.ObjectId(userId),
+                    transactiontype: '-',
+                    transactiondate: { $gte: threeMonthsAgo }
+                }
+            },
+            {
+                $group: {
+                    _id: '$transactioncategory',
+                    total: { $sum: '$transactionamount' }
+                }
+            },
+            {
+                $sort: { total: -1 }
+            }
+        ]);
+        
+        // Get monthly trends
+        const monthlyTrends = await Transactions.aggregate([
+            {
+                $match: {
+                    userId: new mongoose.Types.ObjectId(userId),
+                    transactiondate: { $gte: threeMonthsAgo }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        month: { $month: '$transactiondate' },
+                        year: { $year: '$transactiondate' },
+                        type: '$transactiontype'
+                    },
+                    total: { $sum: '$transactionamount' }
+                }
+            },
+            {
+                $sort: { '_id.year': 1, '_id.month': 1 }
+            }
+        ]);
+        
         const totalIncome = incomeData[0]?.total || 0;
         const totalExpenses = expenseData[0]?.total || 0;
         const netSavings = totalIncome - totalExpenses;
         const savingsRate = totalIncome > 0 ? ((netSavings / totalIncome) * 100).toFixed(1) + '%' : '0%';
+        
+        // Format monthly trends data
+        const formattedTrends = monthlyTrends.reduce((acc, curr) => {
+            const monthYear = `${curr._id.year}-${curr._id.month}`;
+            if (!acc[monthYear]) {
+                acc[monthYear] = { income: 0, expenses: 0 };
+            }
+            if (curr._id.type === '+') {
+                acc[monthYear].income = curr.total;
+            } else {
+                acc[monthYear].expenses = curr.total;
+            }
+            return acc;
+        }, {});
         
         const ctx_reports = {
             pagetitle: 'FinTrack - Reports',
             totalincome: totalIncome.toFixed(2),
             totalexpenses: totalExpenses.toFixed(2),
             netsavings: netSavings.toFixed(2),
-            savingsrate: savingsRate
+            savingsrate: savingsRate,
+            expenseBreakdown: expenseBreakdown,
+            monthlyTrends: formattedTrends,
+            successMessage: req.query.success || '',
+            errorMessage: req.query.error || ''
         };
         
         res.render('reports', ctx_reports);
     } catch (error) {
         console.error('Reports error:', error);
         res.status(500).send('Error loading reports');
+    }
+});
+
+// GENERATE REPORT
+router.post('/reports/generate', requireAuth, async function(req, res) {
+    try {
+        const userId = req.session.user._id;
+        const { reportType, startDate, endDate } = req.body;
+        
+        let reportData = {};
+        let reportTitle = '';
+        
+        // Generate report based on type
+        switch(reportType) {
+            case 'financial-status':
+                reportTitle = 'Financial Status Report';
+                // Get income and expenses for the period
+                const [incomeData, expenseData] = await Promise.all([
+                    Transactions.aggregate([
+                        {
+                            $match: {
+                                userId: new mongoose.Types.ObjectId(userId),
+                                transactiontype: '+',
+                                transactiondate: { 
+                                    $gte: new Date(startDate),
+                                    $lte: new Date(endDate)
+                                }
+                            }
+                        },
+                        {
+                            $group: {
+                                _id: null,
+                                total: { $sum: '$transactionamount' }
+                            }
+                        }
+                    ]),
+                    Transactions.aggregate([
+                        {
+                            $match: {
+                                userId: new mongoose.Types.ObjectId(userId),
+                                transactiontype: '-',
+                                transactiondate: { 
+                                    $gte: new Date(startDate),
+                                    $lte: new Date(endDate)
+                                }
+                            }
+                        },
+                        {
+                            $group: {
+                                _id: null,
+                                total: { $sum: '$transactionamount' }
+                            }
+                        }
+                    ])
+                ]);
+                
+                reportData = {
+                    totalIncome: incomeData[0]?.total || 0,
+                    totalExpenses: expenseData[0]?.total || 0,
+                    netSavings: (incomeData[0]?.total || 0) - (expenseData[0]?.total || 0)
+                };
+                break;
+                
+            case 'expense-breakdown':
+                reportTitle = 'Expense Breakdown Report';
+                const breakdown = await Transactions.aggregate([
+                    {
+                        $match: {
+                            userId: new mongoose.Types.ObjectId(userId),
+                            transactiontype: '-',
+                            transactiondate: { 
+                                $gte: new Date(startDate),
+                                $lte: new Date(endDate)
+                            }
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: '$transactioncategory',
+                            total: { $sum: '$transactionamount' }
+                        }
+                    },
+                    {
+                        $sort: { total: -1 }
+                    }
+                ]);
+                
+                reportData = {
+                    categories: breakdown
+                };
+                break;
+        }
+        
+        // Create PDF
+        const doc = new PDFDocument();
+        const filename = `${reportType}-${Date.now()}.pdf`;
+        
+        // Set response headers
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+        
+        // Pipe PDF to response
+        doc.pipe(res);
+        
+        // Add content to PDF
+        doc.fontSize(25).text(reportTitle, { align: 'center' });
+        doc.moveDown();
+        
+        doc.fontSize(12).text(`Period: ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}`);
+        doc.moveDown();
+        
+        // Add report data based on type
+        switch(reportType) {
+            case 'financial-status':
+                doc.fontSize(14).text('Financial Summary', { underline: true });
+                doc.moveDown();
+                doc.fontSize(12)
+                    .text(`Total Income: Rs ${reportData.totalIncome.toFixed(2)}`)
+                    .text(`Total Expenses: Rs ${reportData.totalExpenses.toFixed(2)}`)
+                    .text(`Net Savings: Rs ${reportData.netSavings.toFixed(2)}`);
+                
+                // Add savings rate
+                const savingsRate = reportData.totalIncome > 0 
+                    ? ((reportData.netSavings / reportData.totalIncome) * 100).toFixed(1) 
+                    : 0;
+                doc.text(`Savings Rate: ${savingsRate}%`);
+                break;
+                
+            case 'expense-breakdown':
+                doc.fontSize(14).text('Expense Breakdown by Category', { underline: true });
+                doc.moveDown();
+                
+                // Calculate total expenses
+                const totalExpenses = reportData.categories.reduce((sum, cat) => sum + cat.total, 0);
+                
+                // Create table
+                let y = doc.y;
+                doc.fontSize(12);
+                
+                // Table headers
+                doc.text('Category', 50, y)
+                   .text('Amount', 250, y)
+                   .text('Percentage', 400, y);
+                
+                y += 20;
+                doc.moveTo(50, y).lineTo(500, y).stroke();
+                y += 10;
+                
+                // Table rows
+                reportData.categories.forEach(category => {
+                    const percentage = ((category.total / totalExpenses) * 100).toFixed(1);
+                    doc.text(category._id, 50, y)
+                       .text(`Rs ${category.total.toFixed(2)}`, 250, y)
+                       .text(`${percentage}%`, 400, y);
+                    y += 20;
+                });
+                
+                // Add total row
+                y += 10;
+                doc.moveTo(50, y).lineTo(500, y).stroke();
+                y += 10;
+                doc.font('Helvetica-Bold')
+                   .text('Total', 50, y)
+                   .text(`Rs ${totalExpenses.toFixed(2)}`, 250, y)
+                   .text('100%', 400, y);
+                break;
+        }
+        
+        // Add footer
+        const pageCount = doc.bufferedPageRange().count;
+        for (let i = 0; i < pageCount; i++) {
+            doc.switchToPage(i);
+            doc.fontSize(10)
+               .text(
+                   `Generated on ${new Date().toLocaleDateString()}`,
+                   50,
+                   doc.page.height - 50,
+                   { align: 'center' }
+               );
+        }
+        
+        // Finalize PDF
+        doc.end();
+    } catch (error) {
+        console.error('Generate report error:', error);
+        res.redirect('/reports?error=Failed to generate report');
+    }
+});
+
+// EXPORT REPORT TO PDF
+router.get('/reports/export/:id', requireAuth, async function(req, res) {
+    try {
+        const userId = req.session.user._id;
+        const reportId = req.params.id;
+        
+        const report = await Report.findOne({ _id: reportId, userId: userId });
+        if (!report) {
+            return res.redirect('/reports?error=Report not found');
+        }
+        
+        // Create PDF
+        const doc = new PDFDocument();
+        const filename = `report-${reportId}.pdf`;
+        
+        // Set response headers
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+        
+        // Pipe PDF to response
+        doc.pipe(res);
+        
+        // Add content to PDF
+        doc.fontSize(25).text('Financial Report', { align: 'center' });
+        doc.moveDown();
+        
+        doc.fontSize(12).text(`Report Type: ${report.reportType}`);
+        doc.text(`Period: ${report.startDate.toLocaleDateString()} to ${report.endDate.toLocaleDateString()}`);
+        doc.moveDown();
+        
+        // Add report data based on type
+        switch(report.reportType) {
+            case 'financial-status':
+                doc.text(`Total Income: Rs ${report.data.totalIncome.toFixed(2)}`);
+                doc.text(`Total Expenses: Rs ${report.data.totalExpenses.toFixed(2)}`);
+                doc.text(`Net Savings: Rs ${report.data.netSavings.toFixed(2)}`);
+                break;
+                
+            case 'expense-breakdown':
+                doc.text('Expense Breakdown by Category:');
+                doc.moveDown();
+                report.data.categories.forEach(category => {
+                    doc.text(`${category._id}: Rs ${category.total.toFixed(2)}`);
+                });
+                break;
+        }
+        
+        // Finalize PDF
+        doc.end();
+    } catch (error) {
+        console.error('Export report error:', error);
+        res.redirect('/reports?error=Failed to export report');
     }
 });
 
