@@ -2,6 +2,7 @@ const { Transaction } = require('mongodb');
 const Transactions = require('../models/transactions');
 const User = require('../models/user');
 const Budget = require('../models/budget');
+const SavingsGoal = require('../models/savingsgoal');
 
 const express = require('express');
 const router = express.Router();
@@ -797,18 +798,126 @@ router.get('/reports', requireAuth, async function(req, res) {
 // SAVINGS GOALS
 router.get('/savingsgoals', requireAuth, async function(req, res) {
     try {
-        // TODO: Implement savings goals functionality
+        const userId = req.session.user._id;
+        
+        // Get all savings goals for the user
+        const savingsGoals = await SavingsGoal.find({ userId: userId });
+        
+        // Calculate totals
+        let totalSavings = 0;
+        let totalGoalAmount = 0;
+        
+        savingsGoals.forEach(goal => {
+            totalSavings += goal.currentAmount;
+            totalGoalAmount += goal.targetAmount;
+        });
+        
         const ctx_savingsgoals = {
             pagetitle: 'FinTrack - Savings Goals',
-            totalsavings: '0',
-            totalgoalamount: '0',
-            activegoal: '0'
+            totalsavings: totalSavings.toFixed(2),
+            totalgoalamount: totalGoalAmount.toFixed(2),
+            activegoal: savingsGoals.length.toString(),
+            savingsGoals: savingsGoals,
+            successMessage: req.query.success || '',
+            errorMessage: req.query.error || ''
         };
         
         res.render('savingsgoals', ctx_savingsgoals);
     } catch (error) {
         console.error('Savings goals error:', error);
         res.status(500).send('Error loading savings goals');
+    }
+});
+
+// CREATE SAVINGS GOAL
+router.post('/savingsgoals/create', requireAuth, async function(req, res) {
+    try {
+        const userId = req.session.user._id;
+        const { name, targetAmount, targetDate, monthlyContribution, description, initialAmount } = req.body;
+        
+        const newGoal = new SavingsGoal({
+            userId: userId,
+            name: name,
+            targetAmount: parseFloat(targetAmount),
+            currentAmount: parseFloat(initialAmount) || 0,
+            targetDate: new Date(targetDate),
+            monthlyContribution: parseFloat(monthlyContribution),
+            description: description || ''
+        });
+        
+        await newGoal.save();
+        
+        res.redirect('/savingsgoals?success=Goal created successfully');
+    } catch (error) {
+        console.error('Create savings goal error:', error);
+        res.redirect('/savingsgoals?error=Failed to create goal');
+    }
+});
+
+// ADD FUNDS TO GOAL
+router.post('/savingsgoals/add-funds/:id', requireAuth, async function(req, res) {
+    try {
+        const userId = req.session.user._id;
+        const goalId = req.params.id;
+        const { amount } = req.body;
+        
+        const goal = await SavingsGoal.findOne({ _id: goalId, userId: userId });
+        if (!goal) {
+            return res.redirect('/savingsgoals?error=Goal not found');
+        }
+        
+        goal.currentAmount += parseFloat(amount);
+        await goal.save();
+        
+        res.redirect('/savingsgoals?success=Funds added successfully');
+    } catch (error) {
+        console.error('Add funds error:', error);
+        res.redirect('/savingsgoals?error=Failed to add funds');
+    }
+});
+
+// EDIT SAVINGS GOAL
+router.post('/savingsgoals/edit/:id', requireAuth, async function(req, res) {
+    try {
+        const userId = req.session.user._id;
+        const goalId = req.params.id;
+        const { name, targetAmount, targetDate, monthlyContribution, description } = req.body;
+        
+        const goal = await SavingsGoal.findOneAndUpdate(
+            { _id: goalId, userId: userId },
+            {
+                name: name,
+                targetAmount: parseFloat(targetAmount),
+                targetDate: new Date(targetDate),
+                monthlyContribution: parseFloat(monthlyContribution),
+                description: description || ''
+            },
+            { new: true }
+        );
+        
+        if (!goal) {
+            return res.redirect('/savingsgoals?error=Goal not found');
+        }
+        
+        res.redirect('/savingsgoals?success=Goal updated successfully');
+    } catch (error) {
+        console.error('Edit savings goal error:', error);
+        res.redirect('/savingsgoals?error=Failed to update goal');
+    }
+});
+
+// DELETE SAVINGS GOAL
+router.get('/savingsgoals/delete/:id', requireAuth, async function(req, res) {
+    try {
+        const userId = req.session.user._id;
+        const goalId = req.params.id;
+        
+        await SavingsGoal.findOneAndDelete({ _id: goalId, userId: userId });
+        
+        res.redirect('/savingsgoals?success=Goal deleted successfully');
+    } catch (error) {
+        console.error('Delete savings goal error:', error);
+        res.redirect('/savingsgoals?error=Failed to delete goal');
     }
 });
 
