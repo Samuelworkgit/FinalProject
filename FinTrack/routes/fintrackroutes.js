@@ -3,11 +3,10 @@ const Transactions = require('../models/transactions');
 const User = require('../models/user');
 const Budget = require('../models/budget');
 
-
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const mongoose = require('mongoose'); // Add this import for ObjectId
+const mongoose = require('mongoose');
 
 // Authentication middleware
 function requireAuth(req, res, next) {
@@ -86,11 +85,6 @@ router.get('/', requireAuth, async function(req, res) {
         const totalIncomeTransactions = allIncomeTransactions[0]?.total || 0;
         const totalExpenses = allExpenses[0]?.total || 0;
         
-        // For current balance, you might want to consider:
-        // Option 1: Only transaction-based balance
-        // const currentBalance = totalIncomeTransactions - totalExpenses;
-        
-        // Option 2: Include monthly income history (recommended)
         // Calculate how many months the user has been active
         const userCreatedDate = new Date(user._id.getTimestamp());
         const monthsSinceCreation = Math.max(1, 
@@ -105,19 +99,19 @@ router.get('/', requireAuth, async function(req, res) {
             .sort({ transactiondate: -1 })
             .limit(5);
         
-                // Get budgets for dashboard display (limit to 4)
-                const budgets = await Budget.find({ userId: userId }).limit(4);
+        // Get budgets for dashboard display (limit to 4)
+        const budgets = await Budget.find({ userId: userId }).limit(4);
         
-                const budgetsWithCalculations = budgets.map(budget => ({
-                    ...budget.toObject(),
-                    remaining: budget.getRemaining(),
-                    percentageUsed: budget.getPercentageUsed()
-                }));
+        const budgetsWithCalculations = budgets.map(budget => ({
+            ...budget.toObject(),
+            remaining: budget.getRemaining(),
+            percentageUsed: budget.getPercentageUsed()
+        }));
 
         const ctx_dashboard = {
             pagetitle: 'FinTrack - Dashboard',
             currentbalance: currentBalance.toFixed(2),
-            monthlyincome: monthlyIncome.toFixed(2),  // Now using the value from settings
+            monthlyincome: monthlyIncome.toFixed(2),
             monthlyexpenses: expenses.toFixed(2),
             monthlysavings: savings.toFixed(2),
             firstname: user.firstname,
@@ -275,7 +269,7 @@ router.get('/transactions', requireAuth, async function(req, res) {
     }
 });
 
-// Add a new route to fetch a specific transaction for editing
+// GET SINGLE TRANSACTION FOR EDITING
 router.get('/edit-transaction/:id', requireAuth, async function(req, res) {
     try {
         const id = req.params.id;
@@ -298,7 +292,7 @@ router.get('/edit-transaction/:id', requireAuth, async function(req, res) {
     }
 });
 
-// ADD TRANSACTION
+// ADD TRANSACTION (Single route with budget updates)
 router.post('/transactions/AddTransactions', requireAuth, async function(req, res) {
     try {
         const userId = req.session.user._id;
@@ -306,7 +300,7 @@ router.post('/transactions/AddTransactions', requireAuth, async function(req, re
         const new_transaction = new Transactions({
             userId: userId,
             transactiontitle: req.body.transactiontitle,
-            transactionamount: req.body.transactionamount,
+            transactionamount: parseFloat(req.body.transactionamount),
             transactiontype: req.body.transactiontype,
             transactioncategory: req.body.transactioncategory,
             transactiondate: req.body.transactiondate,
@@ -314,6 +308,12 @@ router.post('/transactions/AddTransactions', requireAuth, async function(req, re
         });
 
         await new_transaction.save();
+        
+        // Update budget if it's an expense
+        if (req.body.transactiontype === '-') {
+            await updateBudgetSpending(userId, req.body.transactioncategory);
+        }
+        
         res.redirect('/transactions');
     } catch (error) {
         console.error('Error adding transaction:', error);
@@ -327,11 +327,21 @@ router.get('/delete-transactions/:id', requireAuth, async function(req, res) {
         const id = req.params.id;
         const userId = req.session.user._id;
         
-        // Delete only if transaction belongs to this user
-        await Transactions.findOneAndDelete({ 
-            _id: id, 
-            userId: userId 
-        });
+        // Get transaction details before deleting
+        const transaction = await Transactions.findOne({ _id: id, userId: userId });
+        
+        if (transaction) {
+            const category = transaction.transactioncategory;
+            const wasExpense = transaction.transactiontype === '-';
+            
+            // Delete the transaction
+            await Transactions.findOneAndDelete({ _id: id, userId: userId });
+            
+            // Update budget if it was an expense
+            if (wasExpense) {
+                await updateBudgetSpending(userId, category);
+            }
+        }
         
         res.redirect('/transactions');
     } catch (error) {
@@ -346,20 +356,43 @@ router.post('/transactions/update-transactions', requireAuth, async function(req
         const id = req.body.transactionId;
         const userId = req.session.user._id;
         
+        // Get the old transaction to check if category or type changed
+        const oldTransaction = await Transactions.findOne({ _id: id, userId: userId });
+        
         const data = {
             transactiontitle: req.body.transactiontitle,
-            transactionamount: req.body.transactionamount,
+            transactionamount: parseFloat(req.body.transactionamount),
             transactiontype: req.body.transactiontype,
             transactioncategory: req.body.transactioncategory,
             transactiondate: req.body.transactiondate,
             transactionnote: req.body.transactionnote,
         };
         
-        // Update only if transaction belongs to this user
         await Transactions.findOneAndUpdate(
             { _id: id, userId: userId }, 
             data
         );
+        
+        // Update budgets for affected categories
+        if (oldTransaction) {
+            // Update old category if it was an expense
+            if (oldTransaction.transactiontype === '-') {
+                await updateBudgetSpending(userId, oldTransaction.transactioncategory);
+            }
+            
+            // Update new category if it's an expense
+            if (data.transactiontype === '-') {
+                await updateBudgetSpending(userId, data.transactioncategory);
+            }
+            
+            // If it changed from income to expense or vice versa, update both categories
+            if (oldTransaction.transactiontype !== data.transactiontype) {
+                if (oldTransaction.transactiontype === '+' && data.transactiontype === '-') {
+                    // Changed from income to expense
+                    await updateBudgetSpending(userId, data.transactioncategory);
+                }
+            }
+        }
         
         res.redirect('/transactions');
     } catch (error) {
@@ -368,15 +401,18 @@ router.post('/transactions/update-transactions', requireAuth, async function(req
     }
 });
 
-// Keep the old update route for backward compatibility
+// UPDATE TRANSACTION (Legacy route with ID in URL)
 router.post('/transactions/update-transactions/:id', requireAuth, async function(req, res) {
     try {
         const id = req.params.id;
         const userId = req.session.user._id;
         
+        // Get the old transaction to check if category or type changed
+        const oldTransaction = await Transactions.findOne({ _id: id, userId: userId });
+        
         const data = {
             transactiontitle: req.body.transactiontitle,
-            transactionamount: req.body.transactionamount,
+            transactionamount: parseFloat(req.body.transactionamount),
             transactiontype: req.body.transactiontype,
             transactioncategory: req.body.transactioncategory,
             transactiondate: req.body.transactiondate,
@@ -387,6 +423,19 @@ router.post('/transactions/update-transactions/:id', requireAuth, async function
             { _id: id, userId: userId }, 
             data
         );
+        
+        // Update budgets for affected categories
+        if (oldTransaction) {
+            // Update old category if it was an expense
+            if (oldTransaction.transactiontype === '-') {
+                await updateBudgetSpending(userId, oldTransaction.transactioncategory);
+            }
+            
+            // Update new category if it's an expense
+            if (data.transactiontype === '-') {
+                await updateBudgetSpending(userId, data.transactioncategory);
+            }
+        }
         
         res.redirect('/transactions');
     } catch (error) {
@@ -453,6 +502,14 @@ router.post('/login', async function(req, res) {
     }
 });
 
+// REGISTER GET
+router.get('/registration', async function(req, res) {
+    if (req.session.user) {
+        return res.redirect('/');
+    }
+    res.render('registration');
+});
+
 // REGISTER POST
 router.post('/register', async function(req, res) {
     try {
@@ -514,15 +571,7 @@ router.post('/register', async function(req, res) {
     }
 });
 
-// REGISTRATION GET
-router.get('/registration', async function(req, res) {
-    if (req.session.user) {
-        return res.redirect('/');
-    }
-    res.render('registration');
-});
-
-// BUDGET - GET (Updated)
+// BUDGET GET
 router.get('/budget', requireAuth, async function(req, res) {
     try {
         const userId = req.session.user._id;
@@ -565,7 +614,7 @@ router.get('/budget', requireAuth, async function(req, res) {
     }
 });
 
-// CREATE BUDGET - POST
+// CREATE BUDGET POST
 router.post('/budget/create', requireAuth, async function(req, res) {
     try {
         const userId = req.session.user._id;
@@ -602,7 +651,7 @@ router.post('/budget/create', requireAuth, async function(req, res) {
     }
 });
 
-// EDIT BUDGET - POST
+// EDIT BUDGET POST
 router.post('/budget/edit/:id', requireAuth, async function(req, res) {
     try {
         const userId = req.session.user._id;
@@ -629,7 +678,7 @@ router.post('/budget/edit/:id', requireAuth, async function(req, res) {
     }
 });
 
-// DELETE BUDGET - GET
+// DELETE BUDGET GET
 router.get('/budget/delete/:id', requireAuth, async function(req, res) {
     try {
         const userId = req.session.user._id;
@@ -681,104 +730,6 @@ async function updateBudgetSpending(userId, category) {
         console.error('Error updating budget spending:', error);
     }
 }
-
-// Update the ADD TRANSACTION route to update budgets
-router.post('/transactions/AddTransactions', requireAuth, async function(req, res) {
-    try {
-        const userId = req.session.user._id;
-        
-        const new_transaction = new Transactions({
-            userId: userId,
-            transactiontitle: req.body.transactiontitle,
-            transactionamount: req.body.transactionamount,
-            transactiontype: req.body.transactiontype,
-            transactioncategory: req.body.transactioncategory,
-            transactiondate: req.body.transactiondate,
-            transactionnote: req.body.transactionnote
-        });
-
-        await new_transaction.save();
-        
-        // Update budget if it's an expense
-        if (req.body.transactiontype === '-') {
-            await updateBudgetSpending(userId, req.body.transactioncategory);
-        }
-        
-        res.redirect('/transactions');
-    } catch (error) {
-        console.error('Error adding transaction:', error);
-        res.status(500).send('Error adding transaction');
-    }
-});
-
-// Update the DELETE TRANSACTION route to update budgets
-router.get('/delete-transactions/:id', requireAuth, async function(req, res) {
-    try {
-        const id = req.params.id;
-        const userId = req.session.user._id;
-        
-        // Get transaction details before deleting
-        const transaction = await Transactions.findOne({ _id: id, userId: userId });
-        
-        if (transaction) {
-            const category = transaction.transactioncategory;
-            const wasExpense = transaction.transactiontype === '-';
-            
-            // Delete the transaction
-            await Transactions.findOneAndDelete({ _id: id, userId: userId });
-            
-            // Update budget if it was an expense
-            if (wasExpense) {
-                await updateBudgetSpending(userId, category);
-            }
-        }
-        
-        res.redirect('/transactions');
-    } catch (error) {
-        console.error('Error deleting transaction:', error);
-        res.status(500).send('Error deleting transaction');
-    }
-});
-
-// Update the UPDATE TRANSACTION route to update budgets
-router.post('/transactions/update-transactions', requireAuth, async function(req, res) {
-    try {
-        const id = req.body.transactionId;
-        const userId = req.session.user._id;
-        
-        // Get the old transaction to check if category changed
-        const oldTransaction = await Transactions.findOne({ _id: id, userId: userId });
-        
-        const data = {
-            transactiontitle: req.body.transactiontitle,
-            transactionamount: req.body.transactionamount,
-            transactiontype: req.body.transactiontype,
-            transactioncategory: req.body.transactioncategory,
-            transactiondate: req.body.transactiondate,
-            transactionnote: req.body.transactionnote,
-        };
-        
-        await Transactions.findOneAndUpdate(
-            { _id: id, userId: userId }, 
-            data
-        );
-        
-        // Update budgets for both old and new categories if they're expenses
-        if (oldTransaction) {
-            if (oldTransaction.transactiontype === '-') {
-                await updateBudgetSpending(userId, oldTransaction.transactioncategory);
-            }
-            if (data.transactiontype === '-' && data.transactioncategory !== oldTransaction.transactioncategory) {
-                await updateBudgetSpending(userId, data.transactioncategory);
-            }
-        }
-        
-        res.redirect('/transactions');
-    } catch (error) {
-        console.error('Error updating transaction:', error);
-        res.status(500).send('Error updating transaction');
-    }
-});
 
 // REPORTS
 router.get('/reports', requireAuth, async function(req, res) {
@@ -861,7 +812,7 @@ router.get('/savingsgoals', requireAuth, async function(req, res) {
     }
 });
 
-// SETTINGS - GET
+// SETTINGS GET
 router.get('/settings', requireAuth, async function(req, res) {
     try {
         const user = await User.findById(req.session.user._id);
@@ -884,7 +835,7 @@ router.get('/settings', requireAuth, async function(req, res) {
     }
 });
 
-// SETTINGS UPDATE - POST
+// SETTINGS UPDATE POST
 router.post('/settings/update', requireAuth, async function(req, res) {
     try {
         const userId = req.session.user._id;
@@ -925,7 +876,7 @@ router.post('/settings/update', requireAuth, async function(req, res) {
     }
 });
 
-// CHANGE PASSWORD - POST
+// CHANGE PASSWORD POST
 router.post('/settings/change-password', requireAuth, async function(req, res) {
     try {
         const userId = req.session.user._id;

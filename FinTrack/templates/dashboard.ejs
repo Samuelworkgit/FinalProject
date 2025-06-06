@@ -141,74 +141,81 @@
                 <div>Recent Transactions</div>
                 <a href="/transactions" class="btn btn-sm btn-outline-primary">View All</a>
             </div>
-
-
-            <!-- should get the 5 last transactions from the transactions page -->
+        
             <div class="card-body">
-                <div class="transaction-item">
-                    <div class="transaction-icon expense">
-                        <i class="bi bi-cart"></i>
+                <% if (recentTransactions && recentTransactions.length > 0) { %>
+                    <% recentTransactions.forEach(function(transaction) { %>
+                        <div class="transaction-item">
+                            <div class="transaction-icon <%= transaction.transactiontype === '-' ? 'expense' : 'income' %>">
+                                <% 
+                                // Set appropriate icon based on category
+                                let iconClass = "bi-cart"; // Default icon
+                                
+                                switch(transaction.transactioncategory) {
+                                    case "Food & Dining":
+                                        iconClass = "bi-cup-hot";
+                                        break;
+                                    case "Shopping":
+                                        iconClass = "bi-bag";
+                                        break;
+                                    case "Housing":
+                                        iconClass = "bi-house";
+                                        break;
+                                    case "Transportation":
+                                        iconClass = "bi-bus-front";
+                                        break;
+                                    case "Entertainment":
+                                        iconClass = "bi-film";
+                                        break;
+                                    case "Utilities":
+                                        iconClass = "bi-lightning";
+                                        break;
+                                    case "Income":
+                                        iconClass = "bi-bank";
+                                        break;
+                                    case "Salary":
+                                        iconClass = "bi-briefcase";
+                                        break;
+                                    default:
+                                        iconClass = "bi-cart";
+                                }
+                                %>
+                                <i class="bi <%= iconClass %>"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <div class="fw-bold"><%= transaction.transactiontitle %></div>
+                                <div class="transaction-category">
+                                    <%= transaction.transactioncategory %> • 
+                                    <% 
+                                    const transDate = new Date(transaction.transactiondate);
+                                    const today = new Date();
+                                    const yesterday = new Date(today);
+                                    yesterday.setDate(yesterday.getDate() - 1);
+                                    
+                                    if (transDate.toDateString() === today.toDateString()) {
+                                    %>
+                                        Today
+                                    <% } else if (transDate.toDateString() === yesterday.toDateString()) { %>
+                                        Yesterday
+                                    <% } else { %>
+                                        <%= transDate.toLocaleDateString('en-GB', {month: 'long', day: 'numeric', year: 'numeric'}) %>
+                                    <% } %>
+                                </div>
+                            </div>
+                            <div class="transaction-amount <%= transaction.transactiontype === '-' ? 'expense' : 'income' %>">
+                                <%= transaction.transactiontype %>Rs <%= transaction.transactionamount.toFixed(0) %>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div class="text-center py-3">
+                        <p class="text-muted">No transactions yet. Start by adding your first transaction!</p>
+                        <a href="/transactions" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-lg"></i> Add Transaction
+                        </a>
                     </div>
-                    <div class="transaction-details">
-                        <div class="fw-bold">Grocery Shopping</div>
-                        <div class="transaction-category">Food & Dining • Today</div>
-                    </div>
-                    <div class="transaction-amount expense">
-                        -Rs 3,450
-                    </div>
-                </div>
-                <div class="transaction-item">
-                    <div class="transaction-icon income">
-                        <i class="bi bi-briefcase"></i>
-                    </div>
-                    <div class="transaction-details">
-                        <div class="fw-bold">Salary Deposit</div>
-                        <div class="transaction-category">Income • Yesterday</div>
-                    </div>
-                    <div class="transaction-amount income">
-                        +Rs 90,000
-                    </div>
-                </div>
-                <div class="transaction-item">
-                    <div class="transaction-icon expense">
-                        <i class="bi bi-lightning"></i>
-                    </div>
-                    <div class="transaction-details">
-                        <div class="fw-bold">Electricity Bill</div>
-                        <div class="transaction-category">Utilities • April 1, 2025</div>
-                    </div>
-                    <div class="transaction-amount expense">
-                        -Rs 3,780
-                    </div>
-                </div>
-                <div class="transaction-item">
-                    <div class="transaction-icon expense">
-                        <i class="bi bi-cup-hot"></i>
-                    </div>
-                    <div class="transaction-details">
-                        <div class="fw-bold">Coffee Shop</div>
-                        <div class="transaction-category">Food & Dining • March 30, 2025</div>
-                    </div>
-                    <div class="transaction-amount expense">
-                        -Rs 230
-                    </div>
-                </div>
-                <div class="transaction-item">
-                    <div class="transaction-icon expense">
-                        <i class="bi bi-film"></i>
-                    </div>
-                    <div class="transaction-details">
-                        <div class="fw-bold">Movie Tickets</div>
-                        <div class="transaction-category">Entertainment • March 27, 2025</div>
-                    </div>
-                    <div class="transaction-amount expense">
-                        -Rs 1,280
-                    </div>
-                </div>
+                <% } %>
             </div>
-
-
-
         </div>
     </div>
 
