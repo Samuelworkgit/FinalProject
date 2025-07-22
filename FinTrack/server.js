@@ -30,7 +30,8 @@ server.use('/auth',autheticationRouter) // connect authentication router
 
 // set session
 server.use(session({
-    secret: 'gerg789ergy23#@RFEw234f',
+    // secret: 'gerg789ergy23#@RFEw234f',
+    secret: process.env.SESSION_SECRET || 'gerg789ergy23#@RFEw234f',
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false }, // true if using https
@@ -44,7 +45,8 @@ server.use(session({
 server.use('/',FinTrackRouter)
 
 // start server and listen to port
-PORT=3000;
+// PORT=3000;
+PORT = process.env.PORT || 3000;
 server.listen(PORT,function(){
     console.log('Server is running on port ',PORT)
 })

@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
 
 // create the connection string
-const connectionString = "mongodb+srv://samuel:80fPG8GB1DrILxDd@fintrack.egf3jhb.mongodb.net/fintrack?retryWrites=true&w=majority&appName=fintrack";
+// const connectionString = "mongodb+srv://samuel:80fPG8GB1DrILxDd@fintrack.egf3jhb.mongodb.net/fintrack?retryWrites=true&w=majority&appName=fintrack";
+const connectionString = process.env.MONGODB_URI || "mongodb+srv://samuel:80fPG8GB1DrILxDd@fintrack.egf3jhb.mongodb.net/fintrack?retryWrites=true&w=majority&appName=fintrack";
+
 
 // connect to db
 mongoose.connect(connectionString,{
